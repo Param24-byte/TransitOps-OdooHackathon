@@ -36,7 +36,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../components/ui/dropdown-menu";
-import { RefreshCw, MapPin, MoreHorizontal, CheckCircle2, Navigation, XCircle } from "lucide-react";
+import { CheckCircle2, XCircle, MapPin, RefreshCw, Navigation, MoreHorizontal } from "lucide-react";
+import { isAxiosError } from "axios";
 import { useToast } from "../hooks/use-toast";
 import socket from "../lib/socket";
 import { Skeleton } from "../components/ui/skeleton";
@@ -174,11 +175,11 @@ export default function Trips() {
       form.reset();
       fetchTrips();
       fetchFormOptions(); // Refresh options as vehicle/driver are now taken
-    } catch (error: any) {
+    } catch (error) {
       toast({
         variant: "destructive",
         title: "Failed to create trip",
-        description: error.response?.data?.error || "An error occurred.",
+        description: isAxiosError(error) ? (error.response?.data?.message || error.response?.data?.error || "Could not create trip.") : "Could not create trip.",
       });
     } finally {
       setIsSubmitting(false);
@@ -193,11 +194,11 @@ export default function Trips() {
         description: `Trip successfully ${action}ed.`,
       });
       fetchTrips();
-    } catch (error: any) {
+    } catch (error) {
       toast({
         variant: "destructive",
         title: "Action Failed",
-        description: error.response?.data?.error || "Could not update trip status.",
+        description: isAxiosError(error) ? (error.response?.data?.message || error.response?.data?.error || "Could not update trip status.") : "Could not update trip status.",
       });
     }
   };
@@ -214,11 +215,11 @@ export default function Trips() {
       setCompleteTripId(null);
       completeForm.reset();
       fetchTrips();
-    } catch (error: any) {
+    } catch (error) {
       toast({
         variant: "destructive",
-        title: "Action Failed",
-        description: error.response?.data?.error || "Could not complete trip.",
+        title: "Failed to create trip",
+        description: isAxiosError(error) ? (error.response?.data?.message || error.response?.data?.error || "Could not create trip.") : "Could not create trip.",
       });
     } finally {
       setIsSubmitting(false);

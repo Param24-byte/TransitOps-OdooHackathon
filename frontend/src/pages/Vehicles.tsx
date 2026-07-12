@@ -28,7 +28,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../components/ui/select";
-import { RefreshCw, Plus, Trash2, Archive } from "lucide-react";
+import { RefreshCw, Plus, Trash2, Archive, Pencil } from "lucide-react";
+import { isAxiosError } from "axios";
 import { motion } from "framer-motion";
 import { useToast } from "../hooks/use-toast";
 import { Skeleton } from "../components/ui/skeleton";
@@ -74,6 +75,7 @@ export default function Vehicles() {
   const [regionFilter, setRegionFilter] = useState<string>("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const { toast } = useToast();
 
@@ -120,22 +122,45 @@ export default function Vehicles() {
     fetchVehicles();
   }, [regionFilter, refreshTrigger]);
 
+  const handleEdit = (vehicle: Vehicle) => {
+    setEditingId(vehicle.id);
+    form.reset({
+      registrationNo: vehicle.registrationNo,
+      name: vehicle.name,
+      type: vehicle.type as "Light Truck" | "Medium Truck" | "Heavy Truck",
+      capacity: vehicle.capacity,
+      odometer: vehicle.odometer,
+      acquisitionCost: vehicle.acquisitionCost,
+      region: vehicle.region || "",
+    });
+    setIsDialogOpen(true);
+  };
+
   const onSubmit = async (data: VehicleFormValues) => {
     setIsSubmitting(true);
     try {
-      await api.post("/vehicles", data);
-      toast({
-        title: "Success",
-        description: "Vehicle added to fleet.",
-      });
+      if (editingId) {
+        await api.put(`/vehicles/${editingId}`, data);
+        toast({
+          title: "Success",
+          description: "Vehicle updated successfully.",
+        });
+      } else {
+        await api.post("/vehicles", data);
+        toast({
+          title: "Success",
+          description: "Vehicle added to fleet.",
+        });
+      }
       setIsDialogOpen(false);
+      setEditingId(null);
       form.reset();
       fetchVehicles();
-    } catch (error: any) {
+    } catch (error) {
       toast({
         variant: "destructive",
-        title: "Failed to add vehicle",
-        description: error.response?.data?.error || "An error occurred.",
+        title: editingId ? "Failed to update vehicle" : "Failed to add vehicle",
+        description: isAxiosError(error) ? (error.response?.data?.message || error.response?.data?.error || "An error occurred.") : "An error occurred.",
       });
     } finally {
       setIsSubmitting(false);
@@ -151,11 +176,11 @@ export default function Vehicles() {
         description: "Vehicle removed from fleet.",
       });
       fetchVehicles();
-    } catch (error: any) {
+    } catch (error) {
       toast({
         variant: "destructive",
         title: "Failed to delete vehicle",
-        description: error.response?.data?.error || "Could not delete vehicle.",
+        description: isAxiosError(error) ? (error.response?.data?.message || error.response?.data?.error || "Could not delete vehicle.") : "Could not delete vehicle.",
       });
     }
   };
@@ -168,11 +193,11 @@ export default function Vehicles() {
         description: "Vehicle has been retired.",
       });
       fetchVehicles();
-    } catch (error: any) {
+    } catch (error) {
       toast({
         variant: "destructive",
         title: "Failed to retire vehicle",
-        description: error.response?.data?.error || "Could not retire vehicle.",
+        description: isAxiosError(error) ? (error.response?.data?.message || error.response?.data?.error || "Could not retire vehicle.") : "Could not retire vehicle.",
       });
     }
   };
@@ -228,9 +253,9 @@ export default function Vehicles() {
               </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
               <DialogHeader>
-                <DialogTitle>Add New Vehicle</DialogTitle>
+                <DialogTitle>{editingId ? "Edit Vehicle" : "Add New Vehicle"}</DialogTitle>
                 <DialogDescription>
-                  Enter the vehicle details to add it to the fleet.
+                  {editingId ? "Update the vehicle details." : "Enter the vehicle details to add it to the fleet."}
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={form.handleSubmit(onSubmit as any)}>
@@ -238,7 +263,7 @@ export default function Vehicles() {
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="registrationNo" className="text-right">Reg. No</Label>
                     <div className="col-span-3">
-                      <Input id="registrationNo" {...form.register("registrationNo")} placeholder="MH-12-AB-1234" />
+                      <Input id="registrationNo" {...form.register("registrationNo")} placeholder="MH-12-AB-1234" disabled={!!editingId} />
                       {form.formState.errors.registrationNo && <p className="text-sm text-red-500 mt-1">{form.formState.errors.registrationNo.message}</p>}
                     </div>
                   </div>
@@ -280,7 +305,7 @@ export default function Vehicles() {
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="cost" className="text-right">Cost (₹)</Label>
                     <div className="col-span-3">
-                      <Input id="cost" type="number" {...form.register("acquisitionCost")} placeholder="500000" />
+                      <Input id="cost" type="number" {...form.register("acquisitionCost")} placeholder="500000" disabled={!!editingId} />
                       {form.formState.errors.acquisitionCost && <p className="text-sm text-red-500 mt-1">{form.formState.errors.acquisitionCost.message}</p>}
                     </div>
                   </div>
@@ -301,7 +326,7 @@ export default function Vehicles() {
                 </div>
                 <DialogFooter>
                   <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting ? "Saving..." : "Save Vehicle"}
+                    {isSubmitting ? "Saving..." : editingId ? "Save Changes" : "Save Vehicle"}
                   </Button>
                 </DialogFooter>
               </form>
@@ -363,6 +388,9 @@ export default function Vehicles() {
                   <TableCell>
                     {user?.role === "FLEET_MANAGER" && (
                       <div className="flex gap-2">
+                        <Button variant="ghost" size="icon" onClick={() => handleEdit(vehicle)} title="Edit vehicle" className="text-blue-500 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950">
+                          <Pencil className="h-4 w-4" />
+                        </Button>
                         {vehicle.status !== "RETIRED" && vehicle.status !== "ON_TRIP" && (
                           <Button variant="ghost" size="icon" onClick={() => handleRetire(vehicle.id)} title="Retire vehicle" className="text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800">
                             <Archive className="h-4 w-4" />

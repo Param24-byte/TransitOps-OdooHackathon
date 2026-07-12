@@ -28,6 +28,7 @@ import {
   SelectValue,
 } from "../components/ui/select";
 import { Plus, Trash2 } from "lucide-react";
+import { isAxiosError } from "axios";
 import { useToast } from "../hooks/use-toast";
 import { Skeleton } from "../components/ui/skeleton";
 import { useForm } from "react-hook-form";
@@ -127,11 +128,11 @@ export default function Expenses() {
         vehicleId: "",
       });
       fetchExpenses();
-    } catch (error: any) {
+    } catch (error) {
       toast({
         variant: "destructive",
         title: "Failed to add expense",
-        description: error.response?.data?.error || "An error occurred.",
+        description: isAxiosError(error) ? (error.response?.data?.message || error.response?.data?.error || "Could not add expense.") : "Could not add expense.",
       });
     } finally {
       setIsSubmitting(false);
@@ -148,11 +149,11 @@ export default function Expenses() {
         description: "Expense removed.",
       });
       fetchExpenses();
-    } catch (error: any) {
+    } catch (error) {
       toast({
         variant: "destructive",
         title: "Failed to delete expense",
-        description: error.response?.data?.error || "An error occurred.",
+        description: isAxiosError(error) ? (error.response?.data?.message || error.response?.data?.error || "Could not delete expense.") : "Could not delete expense.",
       });
     }
   };

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import api from "../lib/api";
 import { Truck } from "lucide-react";
+import { isAxiosError } from "axios";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
@@ -37,13 +38,13 @@ export default function Login() {
           title: "Success",
           description: "Logged in successfully",
         });
-        navigate("/");
+        navigate("/dashboard");
       }
-    } catch (error: any) {
+    } catch (error) {
       toast({
         variant: "destructive",
-        title: "Login Failed",
-        description: error.response?.data?.error || "An unexpected error occurred",
+        title: "Login failed",
+        description: isAxiosError(error) ? (error.response?.data?.message || error.response?.data?.error || "Invalid credentials.") : "Invalid credentials.",
       });
     } finally {
       setIsLoading(false);

@@ -28,7 +28,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../components/ui/select";
-import { RefreshCw, UserPlus, Trash2, Ban } from "lucide-react";
+import { RefreshCw, UserPlus, Trash2, Ban, Pencil } from "lucide-react";
+import { isAxiosError } from "axios";
 import { useToast } from "../hooks/use-toast";
 import { Skeleton } from "../components/ui/skeleton";
 import { useForm } from "react-hook-form";
@@ -63,6 +64,7 @@ export default function Drivers() {
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const { toast } = useToast();
 
@@ -105,22 +107,42 @@ export default function Drivers() {
     fetchDrivers();
   }, [refreshTrigger]);
 
+  const handleEdit = (driver: Driver) => {
+    setEditingId(driver.id);
+    form.reset({
+      name: driver.name,
+      licenseNumber: driver.licenseNumber,
+      licenseCategory: driver.licenseCategory as "LMV" | "HMV" | "MCWG",
+      contactNumber: driver.contactNumber,
+    });
+    setIsDialogOpen(true);
+  };
+
   const onSubmit = async (data: DriverFormValues) => {
     setIsSubmitting(true);
     try {
-      await api.post("/drivers", data);
-      toast({
-        title: "Success",
-        description: "Driver added successfully.",
-      });
+      if (editingId) {
+        await api.put(`/drivers/${editingId}`, data);
+        toast({
+          title: "Success",
+          description: "Driver updated successfully.",
+        });
+      } else {
+        await api.post("/drivers", data);
+        toast({
+          title: "Success",
+          description: "Driver added successfully.",
+        });
+      }
       setIsDialogOpen(false);
+      setEditingId(null);
       form.reset();
       fetchDrivers();
-    } catch (error: any) {
+    } catch (error) {
       toast({
         variant: "destructive",
-        title: "Failed to add driver",
-        description: error.response?.data?.error || "An error occurred.",
+        title: editingId ? "Failed to update driver" : "Failed to add driver",
+        description: isAxiosError(error) ? (error.response?.data?.message || error.response?.data?.error || "An error occurred.") : "An error occurred.",
       });
     } finally {
       setIsSubmitting(false);
@@ -136,11 +158,11 @@ export default function Drivers() {
         description: "Driver removed successfully.",
       });
       fetchDrivers();
-    } catch (error: any) {
+    } catch (error) {
       toast({
         variant: "destructive",
         title: "Failed to delete driver",
-        description: error.response?.data?.error || "Could not delete driver.",
+        description: isAxiosError(error) ? (error.response?.data?.message || error.response?.data?.error || "Could not delete driver.") : "Could not delete driver.",
       });
     }
   };
@@ -153,11 +175,11 @@ export default function Drivers() {
         description: "Driver has been suspended.",
       });
       fetchDrivers();
-    } catch (error: any) {
+    } catch (error) {
       toast({
         variant: "destructive",
         title: "Failed to suspend driver",
-        description: error.response?.data?.error || "Could not suspend driver.",
+        description: isAxiosError(error) ? (error.response?.data?.message || error.response?.data?.error || "Could not suspend driver.") : "Could not suspend driver.",
       });
     }
   };
@@ -197,7 +219,7 @@ export default function Drivers() {
           </Button>
           
           {(user?.role === "FLEET_MANAGER" || user?.role === "SAFETY_OFFICER") && (
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) setEditingId(null); }}>
               <DialogTrigger asChild>
                 <Button>
                   <UserPlus className="mr-2 h-4 w-4" /> Add Driver
@@ -205,9 +227,9 @@ export default function Drivers() {
               </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
               <DialogHeader>
-                <DialogTitle>Add New Driver</DialogTitle>
+                <DialogTitle>{editingId ? "Edit Driver" : "Add New Driver"}</DialogTitle>
                 <DialogDescription>
-                  Enter the driver's details to onboard them.
+                  {editingId ? "Update the driver details." : "Enter the driver details to register them."}
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -220,9 +242,9 @@ export default function Drivers() {
                     </div>
                   </div>
                   <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="license" className="text-right">License</Label>
+                    <Label htmlFor="licenseNumber" className="text-right">License No</Label>
                     <div className="col-span-3">
-                      <Input id="license" {...form.register("licenseNumber")} placeholder="MH1420230000000" />
+                      <Input id="licenseNumber" {...form.register("licenseNumber")} placeholder="MH1220110012345" disabled={!!editingId} />
                       {form.formState.errors.licenseNumber && <p className="text-sm text-red-500 mt-1">{form.formState.errors.licenseNumber.message}</p>}
                     </div>
                   </div>
@@ -250,7 +272,7 @@ export default function Drivers() {
                 </div>
                 <DialogFooter>
                   <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting ? "Saving..." : "Save Driver"}
+                    {isSubmitting ? "Saving..." : editingId ? "Save Changes" : "Save Driver"}
                   </Button>
                 </DialogFooter>
               </form>
@@ -306,6 +328,9 @@ export default function Drivers() {
                   <TableCell>
                     {(user?.role === "FLEET_MANAGER" || user?.role === "SAFETY_OFFICER") && (
                       <div className="flex gap-2">
+                        <Button variant="ghost" size="icon" onClick={() => handleEdit(driver)} title="Edit driver" className="text-blue-500 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950">
+                          <Pencil className="h-4 w-4" />
+                        </Button>
                         {driver.status !== "SUSPENDED" && driver.status !== "ON_TRIP" && (
                           <Button variant="ghost" size="icon" onClick={() => handleSuspend(driver.id)} title="Suspend driver" className="text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800">
                             <Ban className="h-4 w-4" />

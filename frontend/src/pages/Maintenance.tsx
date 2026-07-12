@@ -28,6 +28,7 @@ import {
   SelectValue,
 } from "../components/ui/select";
 import { Plus, Trash2 } from "lucide-react";
+import { isAxiosError } from "axios";
 import { useToast } from "../hooks/use-toast";
 import { Skeleton } from "../components/ui/skeleton";
 import { useForm } from "react-hook-form";
@@ -123,11 +124,11 @@ export default function Maintenance() {
         vehicleId: "",
       });
       fetchLogs();
-    } catch (error: any) {
+    } catch (error) {
       toast({
         variant: "destructive",
         title: "Failed to add log",
-        description: error.response?.data?.error || "An error occurred.",
+        description: isAxiosError(error) ? (error.response?.data?.message || error.response?.data?.error || "Could not add log.") : "Could not add log.",
       });
     } finally {
       setIsSubmitting(false);
@@ -143,11 +144,11 @@ export default function Maintenance() {
       });
       fetchLogs();
       fetchVehicles(); // update vehicle lists
-    } catch (error: any) {
+    } catch (error) {
       toast({
         variant: "destructive",
         title: "Failed to close log",
-        description: error.response?.data?.message || "An error occurred.",
+        description: isAxiosError(error) ? (error.response?.data?.message || error.response?.data?.error || "Could not close log.") : "Could not close log.",
       });
     }
   };
@@ -162,11 +163,11 @@ export default function Maintenance() {
         description: "Maintenance log removed.",
       });
       fetchLogs();
-    } catch (error: any) {
+    } catch (error) {
       toast({
         variant: "destructive",
-        title: "Failed to delete log",
-        description: error.response?.data?.error || "An error occurred.",
+        title: "Failed to close log",
+        description: isAxiosError(error) ? (error.response?.data?.message || error.response?.data?.error || "Could not close log.") : "Could not close log.",
       });
     }
   };
