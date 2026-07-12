@@ -4,7 +4,6 @@ import AppLayout from "./components/layout/AppLayout";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import { Toaster } from "./components/ui/toaster";
-import { ThemeProvider } from "./components/theme-provider";
 
 import Vehicles from "./pages/Vehicles";
 import Drivers from "./pages/Drivers";
@@ -12,6 +11,7 @@ import Trips from "./pages/Trips";
 import Maintenance from "./pages/Maintenance";
 import Expenses from "./pages/Expenses";
 import Settings from "./pages/Settings";
+import { ThemeProvider } from "next-themes";
 
 // Protected Route wrapper
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
