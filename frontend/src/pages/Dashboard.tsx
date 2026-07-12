@@ -273,7 +273,7 @@ export default function Dashboard() {
                     <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} dy={10} />
                     <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
                     <Tooltip cursor={{ fill: 'rgba(0,0,0,0.05)' }} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }} />
-                    <Bar dataKey="trips" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={40} />
+                    <Bar dataKey="trips" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} barSize={40} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -301,9 +301,9 @@ export default function Dashboard() {
                       paddingAngle={5}
                       dataKey="value"
                     >
-                      <Cell fill="#10b981" />
-                      <Cell fill="#3b82f6" />
-                      <Cell fill="#f59e0b" />
+                      <Cell fill="hsl(var(--primary))" />
+                      <Cell fill="hsl(var(--primary) / 0.5)" />
+                      <Cell fill="hsl(var(--destructive))" />
                     </Pie>
                     <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }} />
                     <Legend verticalAlign="bottom" height={36} />

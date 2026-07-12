@@ -35,6 +35,93 @@ The project follows a modular Service-Controller-Router pattern.
 
 ---
 
+## 🗄️ Database Entity-Relationship Diagram (ERD)
+
+```mermaid
+erDiagram
+    User {
+        Int id PK
+        String email
+        String password
+        String name
+        Role role
+        DateTime createdAt
+        DateTime updatedAt
+    }
+
+    Vehicle {
+        Int id PK
+        String registrationNo
+        String name
+        String type
+        Float capacity
+        Float odometer
+        Float acquisitionCost
+        VehicleStatus status
+        String region
+    }
+
+    Driver {
+        Int id PK
+        String name
+        String licenseNumber
+        String licenseCategory
+        DateTime licenseExpiry
+        String contactNumber
+        Float safetyScore
+        DriverStatus status
+    }
+
+    Trip {
+        Int id PK
+        String source
+        String destination
+        Float cargoWeight
+        Float plannedDistance
+        Float actualDistance
+        Float revenue
+        DateTime completedAt
+        TripStatus status
+        Int vehicleId FK
+        Int driverId FK
+    }
+
+    MaintenanceLog {
+        Int id PK
+        DateTime date
+        String description
+        Float cost
+        MaintenanceStatus status
+        DateTime closedAt
+        Int vehicleId FK
+    }
+
+    FuelLog {
+        Int id PK
+        DateTime date
+        Float liters
+        Float cost
+        Int vehicleId FK
+    }
+
+    Expense {
+        Int id PK
+        DateTime date
+        String type
+        String description
+        Float amount
+        Int vehicleId FK
+    }
+
+    Vehicle ||--o{ Trip : "trips"
+    Driver ||--o{ Trip : "trips"
+    Vehicle ||--o{ MaintenanceLog : "maintenanceLogs"
+    Vehicle ||--o{ FuelLog : "fuelLogs"
+    Vehicle ||--o{ Expense : "expenses"
+```
+
+---
+
 ## 🚀 Getting Started
 
 ### Prerequisites
