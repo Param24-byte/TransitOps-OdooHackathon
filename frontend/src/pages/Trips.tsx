@@ -65,8 +65,8 @@ const tripSchema = z.object({
   driverId: z.string().min(1, "Driver is required"),
   source: z.string().min(3, "Source must be at least 3 characters"),
   destination: z.string().min(3, "Destination must be at least 3 characters"),
-  cargoWeight: z.coerce.number().min(1, "Cargo weight must be positive"),
-  plannedDistance: z.coerce.number().min(1, "Distance must be positive"),
+  cargoWeight: z.number({ message: "Cargo weight must be a valid number" }).min(1, "Cargo weight must be positive"),
+  plannedDistance: z.number({ message: "Distance must be a valid number" }).min(1, "Distance must be positive"),
 });
 
 type TripFormValues = z.infer<typeof tripSchema>;
@@ -284,14 +284,14 @@ export default function Trips() {
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="cargo" className="text-right">Cargo (kg)</Label>
                     <div className="col-span-3">
-                      <Input id="cargo" type="number" {...form.register("cargoWeight")} placeholder="5000" />
+                      <Input id="cargo" type="number" {...form.register("cargoWeight", { valueAsNumber: true })} placeholder="5000" />
                       {form.formState.errors.cargoWeight && <p className="text-sm text-red-500 mt-1">{form.formState.errors.cargoWeight.message}</p>}
                     </div>
                   </div>
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="distance" className="text-right">Distance (km)</Label>
                     <div className="col-span-3">
-                      <Input id="distance" type="number" {...form.register("plannedDistance")} placeholder="1200" />
+                      <Input id="distance" type="number" {...form.register("plannedDistance", { valueAsNumber: true })} placeholder="1200" />
                       {form.formState.errors.plannedDistance && <p className="text-sm text-red-500 mt-1">{form.formState.errors.plannedDistance.message}</p>}
                     </div>
                   </div>

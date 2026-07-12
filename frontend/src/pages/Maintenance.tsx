@@ -46,7 +46,7 @@ interface Maintenance {
 const maintenanceSchema = z.object({
   date: z.string().min(1, "Date is required"),
   description: z.string().min(5, "Description must be at least 5 characters"),
-  cost: z.coerce.number().min(0, "Cost cannot be negative"),
+  cost: z.number({ message: "Cost must be a valid number" }).min(0, "Cost cannot be negative"),
   vehicleId: z.string().min(1, "Vehicle is required"),
 });
 
@@ -206,7 +206,7 @@ export default function Maintenance() {
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="cost" className="text-right">Cost (₹)</Label>
                   <div className="col-span-3">
-                    <Input id="cost" type="number" {...form.register("cost")} placeholder="1500" />
+                    <Input id="cost" type="number" step="any" {...form.register("cost", { valueAsNumber: true })} placeholder="1500" />
                     {form.formState.errors.cost && <p className="text-sm text-red-500 mt-1">{form.formState.errors.cost.message}</p>}
                   </div>
                 </div>

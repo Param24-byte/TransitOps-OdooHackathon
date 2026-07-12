@@ -47,7 +47,7 @@ const expenseSchema = z.object({
   date: z.string().min(1, "Date is required"),
   type: z.enum(["FUEL", "TOLL", "PERMIT", "INSURANCE", "REPAIR", "OTHER"]),
   description: z.string().min(3, "Description must be at least 3 characters"),
-  amount: z.coerce.number().min(0, "Amount cannot be negative"),
+  amount: z.number({ message: "Amount must be a valid number" }).min(0, "Amount cannot be negative"),
 });
 
 type ExpenseFormValues = z.infer<typeof expenseSchema>;
@@ -195,7 +195,7 @@ export default function Expenses() {
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="amount" className="text-right">Amount (₹)</Label>
                   <div className="col-span-3">
-                    <Input id="amount" type="number" {...form.register("amount")} placeholder="500" />
+                    <Input id="amount" type="number" step="any" {...form.register("amount", { valueAsNumber: true })} placeholder="500" />
                     {form.formState.errors.amount && <p className="text-sm text-red-500 mt-1">{form.formState.errors.amount.message}</p>}
                   </div>
                 </div>
