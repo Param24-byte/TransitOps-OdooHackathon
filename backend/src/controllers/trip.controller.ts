@@ -134,4 +134,19 @@ export const tripController = {
       res.status(500).json({ success: false, message });
     }
   },
+
+  async getUtilizationChart(_req: Request, res: Response): Promise<void> {
+    try {
+      const stats = await tripService.getUtilizationStats();
+
+      res.status(200).json({
+        success: true,
+        message: "Utilization stats retrieved.",
+        data: stats,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to retrieve utilization stats.";
+      res.status(500).json({ success: false, message });
+    }
+  },
 };

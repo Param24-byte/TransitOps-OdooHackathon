@@ -2,7 +2,7 @@
 
 import { Router } from "express";
 import { maintenanceController } from "../controllers/maintenance.controller";
-import { authenticate } from "../middleware/auth";
+import { authenticate, authorize } from "../middleware/auth";
 import { validate } from "../middleware/validate";
 
 const router = Router();
@@ -17,7 +17,9 @@ const createValidation = {
 };
 
 router.get("/", maintenanceController.getAll);
-router.post("/", validate(createValidation), maintenanceController.create);
-router.delete("/:id", maintenanceController.delete);
+
+router.post("/", authorize("FLEET_MANAGER"), validate(createValidation), maintenanceController.create);
+router.patch("/:id/close", authorize("FLEET_MANAGER"), maintenanceController.closeMaintenance);
+router.delete("/:id", authorize("FLEET_MANAGER"), maintenanceController.delete);
 
 export default router;

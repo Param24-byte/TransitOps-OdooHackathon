@@ -9,7 +9,7 @@
 
 import { Router } from "express";
 import { vehicleController } from "../controllers/vehicle.controller";
-import { authenticate } from "../middleware/auth";
+import { authenticate, authorize } from "../middleware/auth";
 import { validate } from "../middleware/validate";
 
 const router = Router();
@@ -29,8 +29,9 @@ const createValidation = {
 router.get("/stats", vehicleController.getStats);
 router.get("/", vehicleController.getAll);
 router.get("/:id", vehicleController.getById);
-router.post("/", validate(createValidation), vehicleController.create);
-router.put("/:id", vehicleController.update);
-router.delete("/:id", vehicleController.delete);
+
+router.post("/", authorize("FLEET_MANAGER"), validate(createValidation), vehicleController.create);
+router.put("/:id", authorize("FLEET_MANAGER"), vehicleController.update);
+router.delete("/:id", authorize("FLEET_MANAGER"), vehicleController.delete);
 
 export default router;

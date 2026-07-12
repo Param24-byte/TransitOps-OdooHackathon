@@ -7,7 +7,7 @@
 
 import { Router } from "express";
 import { tripController } from "../controllers/trip.controller";
-import { authenticate } from "../middleware/auth";
+import { authenticate, authorize } from "../middleware/auth";
 import { validate } from "../middleware/validate";
 
 const router = Router();
@@ -24,11 +24,13 @@ const createValidation = {
 };
 
 router.get("/stats", tripController.getStats);
+router.get("/utilization-chart", tripController.getUtilizationChart);
 router.get("/", tripController.getAll);
 router.get("/:id", tripController.getById);
-router.post("/", validate(createValidation), tripController.create);
-router.patch("/:id/dispatch", tripController.dispatch);
-router.patch("/:id/complete", tripController.complete);
-router.patch("/:id/cancel", tripController.cancel);
+
+router.post("/", authorize("DRIVER", "FLEET_MANAGER"), validate(createValidation), tripController.create);
+router.patch("/:id/dispatch", authorize("DRIVER", "FLEET_MANAGER"), tripController.dispatch);
+router.patch("/:id/complete", authorize("DRIVER", "FLEET_MANAGER"), tripController.complete);
+router.patch("/:id/cancel", authorize("DRIVER", "FLEET_MANAGER"), tripController.cancel);
 
 export default router;

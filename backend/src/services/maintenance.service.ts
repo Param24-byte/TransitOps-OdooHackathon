@@ -54,6 +54,7 @@ export const maintenanceService = {
             description: data.description,
             cost: data.cost,
             vehicleId: data.vehicleId,
+            status: "ACTIVE",
           },
           include: {
             vehicle: { select: { registrationNo: true, name: true } },
@@ -78,5 +79,38 @@ export const maintenanceService = {
       throw new Error("Maintenance log not found.");
     }
     return prisma.maintenanceLog.delete({ where: { id } });
+  },
+
+  /**
+   * Close a maintenance log, restoring the vehicle to AVAILABLE unless retired.
+   */
+  async closeMaintenance(id: number) {
+    return prisma.$transaction(async (tx) => {
+      const log = await tx.maintenanceLog.findUnique({
+        where: { id },
+        include: { vehicle: true },
+      });
+
+      if (!log) throw new Error("Maintenance log not found.");
+      if (log.status === "CLOSED") throw new Error("Maintenance is already closed.");
+
+      const updatedLog = await tx.maintenanceLog.update({
+        where: { id },
+        data: {
+          status: "CLOSED",
+          closedAt: new Date(),
+        },
+        include: { vehicle: true },
+      });
+
+      if (log.vehicle.status !== "RETIRED") {
+        await tx.vehicle.update({
+          where: { id: log.vehicleId },
+          data: { status: "AVAILABLE" },
+        });
+      }
+
+      return updatedLog;
+    });
   },
 };

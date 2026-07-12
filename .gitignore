@@ -37,3 +37,6 @@ frontend/dist
 # Prisma
 backend/prisma/*.db
 backend/prisma/*.db-journal
+
+# Custom ignores
+TransitOps_Fix_List.md

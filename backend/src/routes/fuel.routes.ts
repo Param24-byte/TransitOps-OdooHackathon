@@ -2,7 +2,7 @@
 
 import { Router } from "express";
 import { fuelController } from "../controllers/fuel.controller";
-import { authenticate } from "../middleware/auth";
+import { authenticate, authorize } from "../middleware/auth";
 import { validate } from "../middleware/validate";
 
 const router = Router();
@@ -18,7 +18,8 @@ const createValidation = {
 
 router.get("/stats", fuelController.getEfficiencyStats);
 router.get("/", fuelController.getAll);
-router.post("/", validate(createValidation), fuelController.create);
-router.delete("/:id", fuelController.delete);
+
+router.post("/", authorize("FLEET_MANAGER", "FINANCIAL_ANALYST"), validate(createValidation), fuelController.create);
+router.delete("/:id", authorize("FLEET_MANAGER", "FINANCIAL_ANALYST"), fuelController.delete);
 
 export default router;

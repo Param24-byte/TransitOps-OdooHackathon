@@ -40,6 +40,7 @@ interface Maintenance {
   date: string;
   description: string;
   cost: number;
+  status: "ACTIVE" | "CLOSED";
   vehicle: { registrationNo: string; name: string; status: string };
 }
 
@@ -127,6 +128,24 @@ export default function Maintenance() {
       });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleClose = async (id: number) => {
+    try {
+      await api.patch(`/maintenance/${id}/close`);
+      toast({
+        title: "Closed",
+        description: "Maintenance log closed. Vehicle is now available.",
+      });
+      fetchLogs();
+      fetchVehicles(); // update vehicle lists
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Failed to close log",
+        description: error.response?.data?.message || "An error occurred.",
+      });
     }
   };
 
@@ -229,7 +248,7 @@ export default function Maintenance() {
               <TableHead>Vehicle</TableHead>
               <TableHead>Description</TableHead>
               <TableHead className="text-right">Cost (₹)</TableHead>
-              <TableHead className="w-[80px]"></TableHead>
+              <TableHead className="w-[120px] text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -261,7 +280,12 @@ export default function Maintenance() {
                   </TableCell>
                   <TableCell>{log.description}</TableCell>
                   <TableCell className="text-right">₹{log.cost.toLocaleString()}</TableCell>
-                  <TableCell>
+                  <TableCell className="text-right">
+                    {log.status === "ACTIVE" && (
+                      <Button variant="outline" size="sm" onClick={() => handleClose(log.id)} className="mr-2 h-8 text-xs">
+                        Close
+                      </Button>
+                    )}
                     <Button variant="ghost" size="icon" onClick={() => handleDelete(log.id)} title="Delete log" className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950">
                       <Trash2 className="h-4 w-4" />
                     </Button>

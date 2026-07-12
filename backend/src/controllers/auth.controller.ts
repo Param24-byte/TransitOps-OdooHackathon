@@ -10,8 +10,8 @@ import { AuthRequest } from "../types";
 export const authController = {
   async register(req: Request, res: Response): Promise<void> {
     try {
-      const { email, password, name, role } = req.body;
-      const user = await authService.register({ email, password, name, role });
+      const { email, password, name } = req.body;
+      const user = await authService.register({ email, password, name, role: "DRIVER" });
 
       res.status(201).json({
         success: true,

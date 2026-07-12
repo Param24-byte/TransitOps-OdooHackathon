@@ -239,13 +239,13 @@ async function main() {
   // ---- Expenses ----
   await Promise.all([
     prisma.expense.create({
-      data: { date: new Date("2026-07-02"), type: "TOLL", description: "Mumbai-Pune Expressway toll", amount: 350 },
+      data: { date: new Date("2026-07-02"), type: "TOLL", description: "Mumbai-Pune Expressway toll", amount: 350, vehicleId: vehicles[0]!.id },
     }),
     prisma.expense.create({
-      data: { date: new Date("2026-07-04"), type: "PERMIT", description: "Inter-state transport permit renewal", amount: 5000 },
+      data: { date: new Date("2026-07-04"), type: "PERMIT", description: "Inter-state transport permit renewal", amount: 5000, vehicleId: vehicles[1]!.id },
     }),
     prisma.expense.create({
-      data: { date: new Date("2026-07-06"), type: "INSURANCE", description: "Annual vehicle insurance - MH-12-AB-1234", amount: 25000 },
+      data: { date: new Date("2026-07-06"), type: "INSURANCE", description: "Annual vehicle insurance - MH-12-AB-1234", amount: 25000, vehicleId: vehicles[2]!.id },
     }),
   ]);
 

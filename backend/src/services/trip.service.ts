@@ -83,6 +83,10 @@ export const tripService = {
     if (!driver) {
       throw new Error("Driver not found.");
     }
+    
+    if (driver.licenseExpiry <= new Date()) {
+      throw new Error(`Driver ${driver.name}'s license expired on ${driver.licenseExpiry.toDateString()}.`);
+    }
 
     // BUSINESS RULE: Cargo weight must not exceed vehicle capacity
     if (data.cargoWeight > vehicle.capacity) {
@@ -141,6 +145,10 @@ export const tripService = {
         throw new Error(
           `Driver ${trip.driver.name} is currently "${trip.driver.status}". Must be AVAILABLE.`
         );
+      }
+
+      if (trip.driver.licenseExpiry <= new Date()) {
+        throw new Error(`Driver ${trip.driver.name}'s license expired on ${trip.driver.licenseExpiry.toDateString()}.`);
       }
 
       // All checks passed — execute the state transitions atomically
@@ -273,5 +281,44 @@ export const tripService = {
     ]);
 
     return { total, draft, dispatched, completed, cancelled };
+  },
+
+  /**
+   * Utilization statistics for the dashboard.
+   */
+  async getUtilizationStats() {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const recentCompletedTrips = await prisma.trip.findMany({
+      where: { status: "COMPLETED", updatedAt: { gte: sevenDaysAgo } },
+      select: { updatedAt: true },
+    });
+
+    const tripsPerDay: Record<string, number> = {};
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    
+    // Initialize last 7 days
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dayStr = days[d.getDay()] as string;
+      tripsPerDay[dayStr] = 0;
+    }
+
+    recentCompletedTrips.forEach(t => {
+      const day = days[t.updatedAt.getDay()] as string;
+      if (tripsPerDay[day] !== undefined) {
+        tripsPerDay[day]++;
+      }
+    });
+
+    const chartData = Object.keys(tripsPerDay).map(name => ({ name, trips: tripsPerDay[name] }));
+
+    const onTripCount = await prisma.vehicle.count({ where: { status: "ON_TRIP" } });
+    const totalCount = await prisma.vehicle.count({ where: { status: { not: "RETIRED" } } });
+    const utilizationPercent = totalCount === 0 ? 0 : Math.round((onTripCount / totalCount) * 100);
+
+    return { chartData, utilizationPercent };
   },
 };

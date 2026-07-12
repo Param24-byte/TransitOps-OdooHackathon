@@ -31,16 +31,18 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const [vehiclesRes, tripsRes, expensesRes] = await Promise.all([
+        const [vehiclesRes, tripsRes, expensesRes, utilRes] = await Promise.all([
           api.get("/vehicles/stats"),
           api.get("/trips/stats"),
           api.get("/expenses/summary?period=month"),
+          api.get("/trips/utilization-chart")
         ]);
         
         setStats({
           vehicles: vehiclesRes.data.data,
           trips: tripsRes.data.data,
           expenses: expensesRes.data.data,
+          utilization: utilRes.data.data,
         });
       } catch (error) {
         console.error("Failed to fetch dashboard stats", error);
@@ -133,15 +135,7 @@ export default function Dashboard() {
             <div className="h-[300px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
-                  data={[
-                    { name: 'Mon', trips: 12 },
-                    { name: 'Tue', trips: 19 },
-                    { name: 'Wed', trips: 15 },
-                    { name: 'Thu', trips: Math.max(1, stats?.trips?.completed || 0) },
-                    { name: 'Fri', trips: 10 },
-                    { name: 'Sat', trips: 5 },
-                    { name: 'Sun', trips: 4 },
-                  ]}
+                  data={stats?.utilization?.chartData || []}
                   margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />

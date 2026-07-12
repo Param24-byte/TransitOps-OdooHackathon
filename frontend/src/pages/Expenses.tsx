@@ -41,6 +41,7 @@ interface Expense {
   type: "FUEL" | "TOLL" | "PERMIT" | "INSURANCE" | "REPAIR" | "OTHER";
   description: string;
   amount: number;
+  vehicle: { registrationNo: string; name: string; status: string };
 }
 
 const expenseSchema = z.object({
@@ -48,6 +49,7 @@ const expenseSchema = z.object({
   type: z.enum(["FUEL", "TOLL", "PERMIT", "INSURANCE", "REPAIR", "OTHER"]),
   description: z.string().min(3, "Description must be at least 3 characters"),
   amount: z.number({ message: "Amount must be a valid number" }).min(0, "Amount cannot be negative"),
+  vehicleId: z.string().min(1, "Vehicle is required"),
 });
 
 type ExpenseFormValues = z.infer<typeof expenseSchema>;
@@ -66,8 +68,20 @@ export default function Expenses() {
       type: "OTHER",
       description: "",
       amount: 0,
+      vehicleId: "",
     },
   });
+
+  const [availableVehicles, setAvailableVehicles] = useState<{id: number, registrationNo: string}[]>([]);
+
+  const fetchVehicles = async () => {
+    try {
+      const response = await api.get("/vehicles");
+      setAvailableVehicles(response.data.data);
+    } catch (error) {
+      console.error("Failed to load vehicles for expense form");
+    }
+  };
 
   const fetchExpenses = async () => {
     setLoading(true);
@@ -87,12 +101,16 @@ export default function Expenses() {
 
   useEffect(() => {
     fetchExpenses();
+    fetchVehicles();
   }, []);
 
   const onSubmit = async (data: ExpenseFormValues) => {
     setIsSubmitting(true);
     try {
-      await api.post("/expenses", data);
+      await api.post("/expenses", {
+        ...data,
+        vehicleId: Number(data.vehicleId),
+      });
       toast({
         title: "Success",
         description: "Expense added.",
@@ -103,6 +121,7 @@ export default function Expenses() {
         type: "OTHER",
         description: "",
         amount: 0,
+        vehicleId: "",
       });
       fetchExpenses();
     } catch (error: any) {
@@ -185,6 +204,21 @@ export default function Expenses() {
                 </div>
 
                 <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="vehicle" className="text-right">Vehicle</Label>
+                  <div className="col-span-3">
+                    <Select value={form.watch("vehicleId")} onValueChange={(val: any) => form.setValue("vehicleId", val)}>
+                      <SelectTrigger><SelectValue placeholder="Select vehicle" /></SelectTrigger>
+                      <SelectContent>
+                        {availableVehicles.map(v => (
+                          <SelectItem key={v.id} value={v.id.toString()}>{v.registrationNo}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {form.formState.errors.vehicleId && <p className="text-sm text-red-500 mt-1">{form.formState.errors.vehicleId.message}</p>}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="description" className="text-right">Description</Label>
                   <div className="col-span-3">
                     <Input id="description" {...form.register("description")} placeholder="e.g. Highway Toll" />
@@ -215,6 +249,7 @@ export default function Expenses() {
           <TableHeader>
             <TableRow>
               <TableHead>Date</TableHead>
+              <TableHead>Vehicle</TableHead>
               <TableHead>Category</TableHead>
               <TableHead>Description</TableHead>
               <TableHead className="text-right">Amount (₹)</TableHead>
@@ -227,6 +262,7 @@ export default function Expenses() {
                 <TableRow key={i}>
                   <TableCell><Skeleton className="h-4 w-24" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-24" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-48" /></TableCell>
                   <TableCell className="text-right"><Skeleton className="h-4 w-16 ml-auto" /></TableCell>
                   <TableCell><Skeleton className="h-8 w-8 rounded-md" /></TableCell>
@@ -234,7 +270,7 @@ export default function Expenses() {
               ))
             ) : expenses.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center">
+                <TableCell colSpan={6} className="h-24 text-center">
                   No expenses found.
                 </TableCell>
               </TableRow>
@@ -242,6 +278,7 @@ export default function Expenses() {
               expenses.map((expense) => (
                 <TableRow key={expense.id}>
                   <TableCell className="font-medium">{new Date(expense.date).toLocaleDateString()}</TableCell>
+                  <TableCell>{expense.vehicle?.registrationNo || "Unknown"}</TableCell>
                   <TableCell>
                     <Badge variant="outline">{expense.type}</Badge>
                   </TableCell>

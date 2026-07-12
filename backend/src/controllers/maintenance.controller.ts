@@ -56,4 +56,25 @@ export const maintenanceController = {
       res.status(400).json({ success: false, message });
     }
   },
+
+  async closeMaintenance(req: Request, res: Response): Promise<void> {
+    try {
+      const id = parseInt(req.params.id as string);
+      if (isNaN(id)) {
+        res.status(400).json({ success: false, message: "Invalid maintenance log ID." });
+        return;
+      }
+
+      const log = await maintenanceService.closeMaintenance(id);
+
+      res.status(200).json({
+        success: true,
+        message: "Maintenance log closed. Vehicle restored to AVAILABLE if applicable.",
+        data: log,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to close maintenance log.";
+      res.status(400).json({ success: false, message });
+    }
+  },
 };

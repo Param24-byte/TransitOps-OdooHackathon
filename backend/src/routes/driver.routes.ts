@@ -2,7 +2,7 @@
 
 import { Router } from "express";
 import { driverController } from "../controllers/driver.controller";
-import { authenticate } from "../middleware/auth";
+import { authenticate, authorize } from "../middleware/auth";
 import { validate } from "../middleware/validate";
 
 const router = Router();
@@ -20,8 +20,9 @@ const createValidation = {
 router.get("/stats", driverController.getStats);
 router.get("/", driverController.getAll);
 router.get("/:id", driverController.getById);
-router.post("/", validate(createValidation), driverController.create);
-router.put("/:id", driverController.update);
-router.delete("/:id", driverController.delete);
+
+router.post("/", authorize("FLEET_MANAGER", "SAFETY_OFFICER"), validate(createValidation), driverController.create);
+router.put("/:id", authorize("FLEET_MANAGER", "SAFETY_OFFICER"), driverController.update);
+router.delete("/:id", authorize("FLEET_MANAGER", "SAFETY_OFFICER"), driverController.delete);
 
 export default router;

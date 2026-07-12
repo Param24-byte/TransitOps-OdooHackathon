@@ -18,13 +18,13 @@ import { ModeToggle } from "../mode-toggle";
 import { motion, AnimatePresence } from "framer-motion";
 
 const navigation = [
-  { name: "Dashboard", href: "/", icon: LayoutDashboard },
-  { name: "Vehicles", href: "/vehicles", icon: Truck },
-  { name: "Drivers", href: "/drivers", icon: Users },
-  { name: "Trips", href: "/trips", icon: Map },
-  { name: "Maintenance", href: "/maintenance", icon: Wrench },
-  { name: "Expenses", href: "/expenses", icon: DollarSign },
-  { name: "Settings", href: "/settings", icon: Settings },
+  { name: "Dashboard", href: "/", icon: LayoutDashboard }, // Accessible by all
+  { name: "Vehicles", href: "/vehicles", icon: Truck, roles: ["FLEET_MANAGER", "DISPATCHER", "MAINTENANCE_TECH"] },
+  { name: "Drivers", href: "/drivers", icon: Users, roles: ["FLEET_MANAGER", "DISPATCHER", "SAFETY_OFFICER"] },
+  { name: "Trips", href: "/trips", icon: Map, roles: ["FLEET_MANAGER", "DISPATCHER", "DRIVER"] },
+  { name: "Maintenance", href: "/maintenance", icon: Wrench, roles: ["FLEET_MANAGER", "MAINTENANCE_TECH"] },
+  { name: "Expenses", href: "/expenses", icon: DollarSign, roles: ["FLEET_MANAGER", "FINANCIAL_ANALYST"] },
+  { name: "Settings", href: "/settings", icon: Settings }, // Accessible by all
 ];
 
 export default function AppLayout() {
@@ -63,6 +63,9 @@ export default function AppLayout() {
         <div className="flex-1 overflow-y-auto py-4">
           <nav className="space-y-1 px-3">
             {navigation.map((item) => {
+              if (item.roles && user && !item.roles.includes(user.role)) {
+                return null;
+              }
               const isActive = location.pathname === item.href;
               return (
                 <Link
