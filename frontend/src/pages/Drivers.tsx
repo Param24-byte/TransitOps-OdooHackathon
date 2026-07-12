@@ -34,6 +34,8 @@ import { Skeleton } from "../components/ui/skeleton";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { useAuth } from "../contexts/AuthContext";
+
 
 interface Driver {
   id: number;
@@ -55,6 +57,7 @@ const driverSchema = z.object({
 type DriverFormValues = z.infer<typeof driverSchema>;
 
 export default function Drivers() {
+  const { user } = useAuth();
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -145,12 +148,13 @@ export default function Drivers() {
             Refresh
           </Button>
           
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <UserPlus className="mr-2 h-4 w-4" /> Add Driver
-              </Button>
-            </DialogTrigger>
+          {(user?.role === "FLEET_MANAGER" || user?.role === "SAFETY_OFFICER") && (
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <UserPlus className="mr-2 h-4 w-4" /> Add Driver
+                </Button>
+              </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
               <DialogHeader>
                 <DialogTitle>Add New Driver</DialogTitle>
@@ -204,6 +208,7 @@ export default function Drivers() {
               </form>
             </DialogContent>
           </Dialog>
+          )}
         </div>
       </div>
 

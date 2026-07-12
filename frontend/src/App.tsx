@@ -24,16 +24,6 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-const RoleRoute = ({ children, allowedRoles }: { children: React.ReactNode, allowedRoles: string[] }) => {
-  const { user } = useAuth();
-  
-  if (!user || !allowedRoles.includes(user.role)) {
-    return <Navigate to="/" replace />;
-  }
-  
-  return <>{children}</>;
-};
-
 function App() {
   return (
     <ThemeProvider defaultTheme="system" storageKey="transitops-theme" attribute="class">
@@ -51,11 +41,11 @@ function App() {
             }
           >
             <Route index element={<Dashboard />} />
-            <Route path="vehicles" element={<RoleRoute allowedRoles={["FLEET_MANAGER", "DISPATCHER", "MAINTENANCE_TECH"]}><Vehicles /></RoleRoute>} />
-            <Route path="drivers" element={<RoleRoute allowedRoles={["FLEET_MANAGER", "DISPATCHER", "SAFETY_OFFICER"]}><Drivers /></RoleRoute>} />
-            <Route path="trips" element={<RoleRoute allowedRoles={["FLEET_MANAGER", "DISPATCHER", "DRIVER"]}><Trips /></RoleRoute>} />
-            <Route path="maintenance" element={<RoleRoute allowedRoles={["FLEET_MANAGER", "MAINTENANCE_TECH"]}><Maintenance /></RoleRoute>} />
-            <Route path="expenses" element={<RoleRoute allowedRoles={["FLEET_MANAGER", "FINANCIAL_ANALYST"]}><Expenses /></RoleRoute>} />
+            <Route path="vehicles" element={<Vehicles />} />
+            <Route path="drivers" element={<Drivers />} />
+            <Route path="trips" element={<Trips />} />
+            <Route path="maintenance" element={<Maintenance />} />
+            <Route path="expenses" element={<Expenses />} />
             <Route path="settings" element={<Settings />} />
           </Route>
         </Routes>

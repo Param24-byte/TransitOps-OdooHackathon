@@ -34,6 +34,8 @@ import { Skeleton } from "../components/ui/skeleton";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { useAuth } from "../contexts/AuthContext";
+
 
 
 interface Vehicle {
@@ -62,6 +64,7 @@ const vehicleSchema = z.object({
 type VehicleFormValues = z.infer<typeof vehicleSchema>;
 
 export default function Vehicles() {
+  const { user } = useAuth();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -168,12 +171,13 @@ export default function Vehicles() {
             Refresh
           </Button>
 
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" /> Add Vehicle
-              </Button>
-            </DialogTrigger>
+          {user?.role === "FLEET_MANAGER" && (
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="mr-2 h-4 w-4" /> Add Vehicle
+                </Button>
+              </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
               <DialogHeader>
                 <DialogTitle>Add New Vehicle</DialogTitle>
@@ -241,6 +245,7 @@ export default function Vehicles() {
               </form>
             </DialogContent>
           </Dialog>
+          )}
         </div>
       </div>
 
@@ -286,9 +291,11 @@ export default function Vehicles() {
                   <TableCell>{vehicle.odometer.toLocaleString()}</TableCell>
                   <TableCell>{getStatusBadge(vehicle.status)}</TableCell>
                   <TableCell>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(vehicle.id)} title="Delete vehicle" className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    {user?.role === "FLEET_MANAGER" && (
+                      <Button variant="ghost" size="icon" onClick={() => handleDelete(vehicle.id)} title="Delete vehicle" className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
                   </TableCell>
                 </TableRow>
               ))

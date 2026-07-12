@@ -34,6 +34,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Badge } from "../components/ui/badge";
+import { useAuth } from "../contexts/AuthContext";
+
 
 interface Maintenance {
   id: number;
@@ -54,6 +56,7 @@ const maintenanceSchema = z.object({
 type MaintenanceFormValues = z.infer<typeof maintenanceSchema>;
 
 export default function Maintenance() {
+  const { user } = useAuth();
   const [logs, setLogs] = useState<Maintenance[]>([]);
   const [availableVehicles, setAvailableVehicles] = useState<{id: number, registrationNo: string}[]>([]);
   const [loading, setLoading] = useState(true);
@@ -176,14 +179,15 @@ export default function Maintenance() {
           <p className="text-slate-500 dark:text-slate-400">Track vehicle repairs and shop logs.</p>
         </div>
 
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" /> Add Log
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
+        {user?.role === "FLEET_MANAGER" && (
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" /> Add Log
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
               <DialogTitle>Add Maintenance Log</DialogTitle>
               <DialogDescription>
                 Record a new repair or service event.
@@ -238,6 +242,7 @@ export default function Maintenance() {
             </form>
           </DialogContent>
         </Dialog>
+        )}
       </div>
 
       <div className="rounded-md border bg-white dark:bg-slate-950 dark:border-slate-800 shadow-sm overflow-hidden">
@@ -281,14 +286,16 @@ export default function Maintenance() {
                   <TableCell>{log.description}</TableCell>
                   <TableCell className="text-right">₹{log.cost.toLocaleString()}</TableCell>
                   <TableCell className="text-right">
-                    {log.status === "ACTIVE" && (
+                    {user?.role === "FLEET_MANAGER" && log.status === "ACTIVE" && (
                       <Button variant="outline" size="sm" onClick={() => handleClose(log.id)} className="mr-2 h-8 text-xs">
                         Close
                       </Button>
                     )}
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(log.id)} title="Delete log" className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    {user?.role === "FLEET_MANAGER" && (
+                      <Button variant="ghost" size="icon" onClick={() => handleDelete(log.id)} title="Delete log" className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
                   </TableCell>
                 </TableRow>
               ))

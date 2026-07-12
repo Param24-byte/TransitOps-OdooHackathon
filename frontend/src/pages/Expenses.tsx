@@ -34,6 +34,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Badge } from "../components/ui/badge";
+import { useAuth } from "../contexts/AuthContext";
+
 
 interface Expense {
   id: number;
@@ -55,6 +57,7 @@ const expenseSchema = z.object({
 type ExpenseFormValues = z.infer<typeof expenseSchema>;
 
 export default function Expenses() {
+  const { user } = useAuth();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -162,12 +165,13 @@ export default function Expenses() {
           <p className="text-slate-500 dark:text-slate-400">Track company expenses and operational costs.</p>
         </div>
 
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" /> Add Expense
-            </Button>
-          </DialogTrigger>
+        {(user?.role === "FLEET_MANAGER" || user?.role === "FINANCIAL_ANALYST") && (
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" /> Add Expense
+              </Button>
+            </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle>Add Expense</DialogTitle>
@@ -239,9 +243,10 @@ export default function Expenses() {
                   {isSubmitting ? "Saving..." : "Save Expense"}
                 </Button>
               </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+              </form>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
 
       <div className="rounded-md border bg-white dark:bg-slate-950 dark:border-slate-800 shadow-sm overflow-hidden">
@@ -285,9 +290,11 @@ export default function Expenses() {
                   <TableCell>{expense.description}</TableCell>
                   <TableCell className="text-right font-semibold">₹{expense.amount.toLocaleString()}</TableCell>
                   <TableCell>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(expense.id)} title="Delete expense" className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    {(user?.role === "FLEET_MANAGER" || user?.role === "FINANCIAL_ANALYST") && (
+                      <Button variant="ghost" size="icon" onClick={() => handleDelete(expense.id)} title="Delete expense" className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
                   </TableCell>
                 </TableRow>
               ))

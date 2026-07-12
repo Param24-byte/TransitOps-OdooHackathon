@@ -43,6 +43,8 @@ import { Skeleton } from "../components/ui/skeleton";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { useAuth } from "../contexts/AuthContext";
+
 
 interface Trip {
   id: number;
@@ -72,6 +74,7 @@ const tripSchema = z.object({
 type TripFormValues = z.infer<typeof tripSchema>;
 
 export default function Trips() {
+  const { user } = useAuth();
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -219,12 +222,13 @@ export default function Trips() {
             Refresh
           </Button>
 
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <MapPin className="mr-2 h-4 w-4" /> Create Trip
-              </Button>
-            </DialogTrigger>
+          {(user?.role === "FLEET_MANAGER" || user?.role === "DRIVER") && (
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <MapPin className="mr-2 h-4 w-4" /> Create Trip
+                </Button>
+              </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
               <DialogHeader>
                 <DialogTitle>Create New Trip</DialogTitle>
@@ -304,6 +308,7 @@ export default function Trips() {
               </form>
             </DialogContent>
           </Dialog>
+          )}
         </div>
       </div>
 
@@ -366,14 +371,14 @@ export default function Trips() {
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         
-                        {trip.status === "DRAFT" && (
+                        {(user?.role === "FLEET_MANAGER" || user?.role === "DRIVER") && trip.status === "DRAFT" && (
                           <DropdownMenuItem onClick={() => handleStatusChange(trip.id, "dispatch")}>
                             <Navigation className="mr-2 h-4 w-4" />
                             Dispatch Trip
                           </DropdownMenuItem>
                         )}
                         
-                        {trip.status === "DISPATCHED" && (
+                        {(user?.role === "FLEET_MANAGER" || user?.role === "DRIVER") && trip.status === "DISPATCHED" && (
                           <DropdownMenuItem onClick={() => handleStatusChange(trip.id, "complete")}>
                             <CheckCircle2 className="mr-2 h-4 w-4" />
                             Mark Completed
