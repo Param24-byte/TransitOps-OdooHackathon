@@ -1,11 +1,11 @@
 // src/controllers/trip.controller.ts
 
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { tripService } from "../services/trip.service";
 import { TripStatus } from "@prisma/client";
 
 export const tripController = {
-  async getAll(req: Request, res: Response): Promise<void> {
+  async getAll(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const status = req.query.status as TripStatus | undefined;
       const trips = await tripService.getAll(status);
@@ -16,12 +16,15 @@ export const tripController = {
         data: trips,
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to retrieve trips.";
-      res.status(500).json({ success: false, message });
+      if (error instanceof Error && error.name === "Error") {
+        res.status(500).json({ success: false, message: error.message });
+      } else {
+        next(error);
+      }
     }
   },
 
-  async getById(req: Request, res: Response): Promise<void> {
+  async getById(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const id = parseInt(req.params.id as string);
       if (isNaN(id)) {
@@ -37,12 +40,15 @@ export const tripController = {
         data: trip,
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to retrieve trip.";
-      res.status(404).json({ success: false, message });
+      if (error instanceof Error && error.name === "Error") {
+        res.status(404).json({ success: false, message: error.message });
+      } else {
+        next(error);
+      }
     }
   },
 
-  async create(req: Request, res: Response): Promise<void> {
+  async create(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const trip = await tripService.create(req.body);
 
@@ -52,12 +58,15 @@ export const tripController = {
         data: trip,
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to create trip.";
-      res.status(400).json({ success: false, message });
+      if (error instanceof Error && error.name === "Error") {
+        res.status(400).json({ success: false, message: error.message });
+      } else {
+        next(error);
+      }
     }
   },
 
-  async dispatch(req: Request, res: Response): Promise<void> {
+  async dispatch(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const id = parseInt(req.params.id as string);
       if (isNaN(id)) {
@@ -73,12 +82,15 @@ export const tripController = {
         data: trip,
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to dispatch trip.";
-      res.status(400).json({ success: false, message });
+      if (error instanceof Error && error.name === "Error") {
+        res.status(400).json({ success: false, message: error.message });
+      } else {
+        next(error);
+      }
     }
   },
 
-  async complete(req: Request, res: Response): Promise<void> {
+  async complete(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const id = parseInt(req.params.id as string);
       if (isNaN(id)) {
@@ -94,12 +106,15 @@ export const tripController = {
         data: trip,
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to complete trip.";
-      res.status(400).json({ success: false, message });
+      if (error instanceof Error && error.name === "Error") {
+        res.status(400).json({ success: false, message: error.message });
+      } else {
+        next(error);
+      }
     }
   },
 
-  async cancel(req: Request, res: Response): Promise<void> {
+  async cancel(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const id = parseInt(req.params.id as string);
       if (isNaN(id)) {
@@ -115,12 +130,15 @@ export const tripController = {
         data: trip,
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to cancel trip.";
-      res.status(400).json({ success: false, message });
+      if (error instanceof Error && error.name === "Error") {
+        res.status(400).json({ success: false, message: error.message });
+      } else {
+        next(error);
+      }
     }
   },
 
-  async getStats(_req: Request, res: Response): Promise<void> {
+  async getStats(_req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const stats = await tripService.getStats();
 
@@ -130,12 +148,15 @@ export const tripController = {
         data: stats,
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to retrieve stats.";
-      res.status(500).json({ success: false, message });
+      if (error instanceof Error && error.name === "Error") {
+        res.status(500).json({ success: false, message: error.message });
+      } else {
+        next(error);
+      }
     }
   },
 
-  async getUtilizationChart(_req: Request, res: Response): Promise<void> {
+  async getUtilizationChart(_req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const stats = await tripService.getUtilizationStats();
 
@@ -145,8 +166,11 @@ export const tripController = {
         data: stats,
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to retrieve utilization stats.";
-      res.status(500).json({ success: false, message });
+      if (error instanceof Error && error.name === "Error") {
+        res.status(500).json({ success: false, message: error.message });
+      } else {
+        next(error);
+      }
     }
   },
 };

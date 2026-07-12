@@ -11,7 +11,7 @@ model User {
   email     String   @unique
   password  String
   name      String
-  role      Role     @default(FLEET_MANAGER)
+  role      Role     @default(DRIVER)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

@@ -3,12 +3,12 @@
 // Controllers ONLY handle: parsing the request, calling the service, and formatting the response.
 // They should contain ZERO business logic.
 
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { authService } from "../services/auth.service";
 import { AuthRequest } from "../types";
 
 export const authController = {
-  async register(req: Request, res: Response): Promise<void> {
+  async register(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { email, password, name } = req.body;
       const user = await authService.register({ email, password, name, role: "DRIVER" });
@@ -19,12 +19,15 @@ export const authController = {
         data: user,
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Registration failed.";
-      res.status(400).json({ success: false, message });
+      if (error instanceof Error && error.name === "Error") {
+        res.status(400).json({ success: false, message: error.message });
+      } else {
+        next(error);
+      }
     }
   },
 
-  async login(req: Request, res: Response): Promise<void> {
+  async login(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { email, password } = req.body;
       const result = await authService.login(email, password);
@@ -35,12 +38,15 @@ export const authController = {
         data: result,
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Login failed.";
-      res.status(401).json({ success: false, message });
+      if (error instanceof Error && error.name === "Error") {
+        res.status(401).json({ success: false, message: error.message });
+      } else {
+        next(error);
+      }
     }
   },
 
-  async getProfile(req: AuthRequest, res: Response): Promise<void> {
+  async getProfile(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
     try {
       if (!req.user) {
         res.status(401).json({ success: false, message: "Not authenticated." });
@@ -55,8 +61,11 @@ export const authController = {
         data: user,
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to retrieve profile.";
-      res.status(404).json({ success: false, message });
+      if (error instanceof Error && error.name === "Error") {
+        res.status(404).json({ success: false, message: error.message });
+      } else {
+        next(error);
+      }
     }
   },
 };

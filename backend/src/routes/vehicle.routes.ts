@@ -26,12 +26,21 @@ const createValidation = {
   acquisitionCost: { required: true, type: "number" as const, min: 0 },
 };
 
+const updateValidation = {
+  name: { required: false, type: "string" as const, min: 2 },
+  type: { required: false, type: "string" as const },
+  capacity: { required: false, type: "number" as const, min: 0 },
+  odometer: { required: false, type: "number" as const, min: 0 },
+  region: { required: false, type: "string" as const },
+};
+
 router.get("/stats", vehicleController.getStats);
 router.get("/", vehicleController.getAll);
 router.get("/:id", vehicleController.getById);
 
 router.post("/", authorize("FLEET_MANAGER"), validate(createValidation), vehicleController.create);
-router.put("/:id", authorize("FLEET_MANAGER"), vehicleController.update);
+router.put("/:id", authorize("FLEET_MANAGER"), validate(updateValidation), vehicleController.update);
+router.put("/:id/retire", authorize("FLEET_MANAGER"), vehicleController.retire);
 router.delete("/:id", authorize("FLEET_MANAGER"), vehicleController.delete);
 
 export default router;

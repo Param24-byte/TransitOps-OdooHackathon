@@ -1,10 +1,10 @@
 // src/controllers/maintenance.controller.ts
 
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { maintenanceService } from "../services/maintenance.service";
 
 export const maintenanceController = {
-  async getAll(req: Request, res: Response): Promise<void> {
+  async getAll(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const vehicleId = req.query.vehicleId
         ? parseInt(req.query.vehicleId as string)
@@ -17,12 +17,15 @@ export const maintenanceController = {
         data: logs,
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to retrieve logs.";
-      res.status(500).json({ success: false, message });
+      if (error instanceof Error && error.name === "Error") {
+        res.status(500).json({ success: false, message: error.message });
+      } else {
+        next(error);
+      }
     }
   },
 
-  async create(req: Request, res: Response): Promise<void> {
+  async create(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const log = await maintenanceService.create(req.body);
 
@@ -32,12 +35,15 @@ export const maintenanceController = {
         data: log,
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to create log.";
-      res.status(400).json({ success: false, message });
+      if (error instanceof Error && error.name === "Error") {
+        res.status(400).json({ success: false, message: error.message });
+      } else {
+        next(error);
+      }
     }
   },
 
-  async delete(req: Request, res: Response): Promise<void> {
+  async delete(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const id = parseInt(req.params.id as string);
       if (isNaN(id)) {
@@ -52,12 +58,15 @@ export const maintenanceController = {
         message: "Maintenance log deleted.",
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to delete log.";
-      res.status(400).json({ success: false, message });
+      if (error instanceof Error && error.name === "Error") {
+        res.status(400).json({ success: false, message: error.message });
+      } else {
+        next(error);
+      }
     }
   },
 
-  async closeMaintenance(req: Request, res: Response): Promise<void> {
+  async closeMaintenance(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const id = parseInt(req.params.id as string);
       if (isNaN(id)) {
@@ -73,8 +82,11 @@ export const maintenanceController = {
         data: log,
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to close maintenance log.";
-      res.status(400).json({ success: false, message });
+      if (error instanceof Error && error.name === "Error") {
+        res.status(400).json({ success: false, message: error.message });
+      } else {
+        next(error);
+      }
     }
   },
 };

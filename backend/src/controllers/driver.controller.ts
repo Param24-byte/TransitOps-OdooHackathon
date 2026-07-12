@@ -1,11 +1,11 @@
 // src/controllers/driver.controller.ts
 
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { driverService } from "../services/driver.service";
 import { DriverStatus } from "@prisma/client";
 
 export const driverController = {
-  async getAll(req: Request, res: Response): Promise<void> {
+  async getAll(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const status = req.query.status as DriverStatus | undefined;
       const drivers = await driverService.getAll(status);
@@ -16,12 +16,15 @@ export const driverController = {
         data: drivers,
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to retrieve drivers.";
-      res.status(500).json({ success: false, message });
+      if (error instanceof Error && error.name === "Error") {
+        res.status(500).json({ success: false, message: error.message });
+      } else {
+        next(error);
+      }
     }
   },
 
-  async getById(req: Request, res: Response): Promise<void> {
+  async getById(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const id = parseInt(req.params.id as string);
       if (isNaN(id)) {
@@ -37,12 +40,15 @@ export const driverController = {
         data: driver,
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to retrieve driver.";
-      res.status(404).json({ success: false, message });
+      if (error instanceof Error && error.name === "Error") {
+        res.status(404).json({ success: false, message: error.message });
+      } else {
+        next(error);
+      }
     }
   },
 
-  async create(req: Request, res: Response): Promise<void> {
+  async create(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const driver = await driverService.create(req.body);
 
@@ -52,12 +58,15 @@ export const driverController = {
         data: driver,
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to create driver.";
-      res.status(400).json({ success: false, message });
+      if (error instanceof Error && error.name === "Error") {
+        res.status(400).json({ success: false, message: error.message });
+      } else {
+        next(error);
+      }
     }
   },
 
-  async update(req: Request, res: Response): Promise<void> {
+  async update(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const id = parseInt(req.params.id as string);
       if (isNaN(id)) {
@@ -73,12 +82,15 @@ export const driverController = {
         data: driver,
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to update driver.";
-      res.status(400).json({ success: false, message });
+      if (error instanceof Error && error.name === "Error") {
+        res.status(400).json({ success: false, message: error.message });
+      } else {
+        next(error);
+      }
     }
   },
 
-  async delete(req: Request, res: Response): Promise<void> {
+  async delete(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const id = parseInt(req.params.id as string);
       if (isNaN(id)) {
@@ -93,12 +105,38 @@ export const driverController = {
         message: "Driver deleted successfully.",
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to delete driver.";
-      res.status(400).json({ success: false, message });
+      if (error instanceof Error && error.name === "Error") {
+        res.status(400).json({ success: false, message: error.message });
+      } else {
+        next(error);
+      }
     }
   },
 
-  async getStats(_req: Request, res: Response): Promise<void> {
+  async suspend(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const id = parseInt(req.params.id as string);
+      if (isNaN(id)) {
+        res.status(400).json({ success: false, message: "Invalid driver ID." });
+        return;
+      }
+
+      await driverService.suspend(id);
+
+      res.status(200).json({
+        success: true,
+        message: "Driver suspended successfully.",
+      });
+    } catch (error) {
+      if (error instanceof Error && error.name === "Error") {
+        res.status(400).json({ success: false, message: error.message });
+      } else {
+        next(error);
+      }
+    }
+  },
+
+  async getStats(_req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const stats = await driverService.getStats();
 
@@ -108,8 +146,11 @@ export const driverController = {
         data: stats,
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to retrieve stats.";
-      res.status(500).json({ success: false, message });
+      if (error instanceof Error && error.name === "Error") {
+        res.status(500).json({ success: false, message: error.message });
+      } else {
+        next(error);
+      }
     }
   },
 };

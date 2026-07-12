@@ -17,12 +17,20 @@ const createValidation = {
   contactNumber: { required: true, type: "string" as const },
 };
 
+const updateValidation = {
+  name: { required: false, type: "string" as const, min: 2 },
+  licenseCategory: { required: false, type: "string" as const },
+  contactNumber: { required: false, type: "string" as const },
+  safetyScore: { required: false, type: "number" as const, min: 0 },
+};
+
 router.get("/stats", driverController.getStats);
 router.get("/", driverController.getAll);
 router.get("/:id", driverController.getById);
 
 router.post("/", authorize("FLEET_MANAGER", "SAFETY_OFFICER"), validate(createValidation), driverController.create);
-router.put("/:id", authorize("FLEET_MANAGER", "SAFETY_OFFICER"), driverController.update);
+router.put("/:id", authorize("FLEET_MANAGER", "SAFETY_OFFICER"), validate(updateValidation), driverController.update);
+router.put("/:id/suspend", authorize("FLEET_MANAGER", "SAFETY_OFFICER"), driverController.suspend);
 router.delete("/:id", authorize("FLEET_MANAGER", "SAFETY_OFFICER"), driverController.delete);
 
 export default router;

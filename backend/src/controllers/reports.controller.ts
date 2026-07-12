@@ -1,8 +1,8 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { reportsService } from "../services/reports.service";
 
 export const reportsController = {
-  async getFuelEfficiency(_req: Request, res: Response): Promise<void> {
+  async getFuelEfficiency(_req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const data = await reportsService.getFuelEfficiency();
       res.status(200).json({ success: true, data });
@@ -11,7 +11,7 @@ export const reportsController = {
     }
   },
 
-  async getOperationalCosts(_req: Request, res: Response): Promise<void> {
+  async getOperationalCosts(_req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const data = await reportsService.getOperationalCosts();
       res.status(200).json({ success: true, data });
@@ -20,7 +20,7 @@ export const reportsController = {
     }
   },
 
-  async getFleetUtilization(_req: Request, res: Response): Promise<void> {
+  async getFleetUtilization(_req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const data = await reportsService.getFleetUtilization();
       res.status(200).json({ success: true, data });
@@ -29,7 +29,7 @@ export const reportsController = {
     }
   },
 
-  async getVehicleROI(_req: Request, res: Response): Promise<void> {
+  async getVehicleROI(_req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const data = await reportsService.getVehicleROI();
       res.status(200).json({ success: true, data });
@@ -38,7 +38,7 @@ export const reportsController = {
     }
   },
 
-  async exportCSV(req: Request, res: Response): Promise<void> {
+  async exportCSV(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const type = req.query.type as string;
       if (!type) {
@@ -52,8 +52,11 @@ export const reportsController = {
       res.setHeader('Content-Disposition', `attachment; filename=${type}-report.csv`);
       res.status(200).send(csv);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to export CSV.";
-      res.status(400).json({ success: false, message });
+      if (error instanceof Error && error.name === "Error") {
+        res.status(400).json({ success: false, message: error.message });
+      } else {
+        next(error);
+      }
     }
   }
 };

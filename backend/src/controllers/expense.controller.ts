@@ -1,10 +1,10 @@
 // src/controllers/expense.controller.ts
 
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { expenseService } from "../services/expense.service";
 
 export const expenseController = {
-  async getAll(_req: Request, res: Response): Promise<void> {
+  async getAll(_req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const expenses = await expenseService.getAll();
 
@@ -14,12 +14,15 @@ export const expenseController = {
         data: expenses,
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to retrieve expenses.";
-      res.status(500).json({ success: false, message });
+      if (error instanceof Error && error.name === "Error") {
+        res.status(500).json({ success: false, message: error.message });
+      } else {
+        next(error);
+      }
     }
   },
 
-  async create(req: Request, res: Response): Promise<void> {
+  async create(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const expense = await expenseService.create(req.body);
 
@@ -29,12 +32,15 @@ export const expenseController = {
         data: expense,
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to create expense.";
-      res.status(400).json({ success: false, message });
+      if (error instanceof Error && error.name === "Error") {
+        res.status(400).json({ success: false, message: error.message });
+      } else {
+        next(error);
+      }
     }
   },
 
-  async delete(req: Request, res: Response): Promise<void> {
+  async delete(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const id = parseInt(req.params.id as string);
       if (isNaN(id)) {
@@ -49,12 +55,15 @@ export const expenseController = {
         message: "Expense deleted.",
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to delete expense.";
-      res.status(400).json({ success: false, message });
+      if (error instanceof Error && error.name === "Error") {
+        res.status(400).json({ success: false, message: error.message });
+      } else {
+        next(error);
+      }
     }
   },
 
-  async getSummary(_req: Request, res: Response): Promise<void> {
+  async getSummary(_req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const summary = await expenseService.getSummary();
 
@@ -64,8 +73,11 @@ export const expenseController = {
         data: summary,
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to retrieve summary.";
-      res.status(500).json({ success: false, message });
+      if (error instanceof Error && error.name === "Error") {
+        res.status(500).json({ success: false, message: error.message });
+      } else {
+        next(error);
+      }
     }
   },
 };

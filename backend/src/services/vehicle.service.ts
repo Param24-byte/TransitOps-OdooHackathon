@@ -89,7 +89,6 @@ export const vehicleService = {
       type: string;
       capacity: number;
       odometer: number;
-      status: VehicleStatus;
     }>
   ) {
     const vehicle = await prisma.vehicle.findUnique({ where: { id } });
@@ -108,7 +107,14 @@ export const vehicleService = {
    * Delete a vehicle. Only allowed if the vehicle is not ON_TRIP.
    */
   async delete(id: number) {
-    const vehicle = await prisma.vehicle.findUnique({ where: { id } });
+    const vehicle = await prisma.vehicle.findUnique({ 
+      where: { id },
+      include: {
+        _count: {
+          select: { trips: true, maintenanceLogs: true, fuelLogs: true, expenses: true }
+        }
+      }
+    });
 
     if (!vehicle) {
       throw new Error("Vehicle not found.");
@@ -118,7 +124,36 @@ export const vehicleService = {
       throw new Error("Cannot delete a vehicle that is currently on a trip.");
     }
 
+    const hasHistory = vehicle._count.trips > 0 || 
+                       vehicle._count.maintenanceLogs > 0 || 
+                       vehicle._count.fuelLogs > 0 || 
+                       vehicle._count.expenses > 0;
+
+    if (hasHistory) {
+      throw new Error("Cannot delete a vehicle with operational history. Consider marking it RETIRED instead.");
+    }
+
     return prisma.vehicle.delete({ where: { id } });
+  },
+
+  /**
+   * Retire a vehicle. Sets status to RETIRED. Not allowed if ON_TRIP.
+   */
+  async retire(id: number) {
+    const vehicle = await prisma.vehicle.findUnique({ where: { id } });
+
+    if (!vehicle) {
+      throw new Error("Vehicle not found.");
+    }
+
+    if (vehicle.status === "ON_TRIP") {
+      throw new Error("Cannot retire a vehicle that is currently on a trip.");
+    }
+
+    return prisma.vehicle.update({
+      where: { id },
+      data: { status: "RETIRED" },
+    });
   },
 
   /**

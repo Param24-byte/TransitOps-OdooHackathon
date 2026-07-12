@@ -28,7 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../components/ui/select";
-import { RefreshCw, UserPlus } from "lucide-react";
+import { RefreshCw, UserPlus, Trash2, Ban } from "lucide-react";
 import { useToast } from "../hooks/use-toast";
 import { Skeleton } from "../components/ui/skeleton";
 import { useForm } from "react-hook-form";
@@ -45,7 +45,7 @@ interface Driver {
   licenseCategory: string;
   contactNumber: string;
   safetyScore: number;
-  status: "AVAILABLE" | "ON_TRIP" | "OFF_DUTY";
+  status: "AVAILABLE" | "ON_TRIP" | "OFF_DUTY" | "SUSPENDED";
 }
 
 const driverSchema = z.object({
@@ -127,6 +127,41 @@ export default function Drivers() {
     }
   };
 
+  const handleDelete = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this driver?")) return;
+    try {
+      await api.delete(`/drivers/${id}`);
+      toast({
+        title: "Deleted",
+        description: "Driver removed successfully.",
+      });
+      fetchDrivers();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Failed to delete driver",
+        description: error.response?.data?.error || "Could not delete driver.",
+      });
+    }
+  };
+
+  const handleSuspend = async (id: number) => {
+    try {
+      await api.put(`/drivers/${id}/suspend`);
+      toast({
+        title: "Suspended",
+        description: "Driver has been suspended.",
+      });
+      fetchDrivers();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Failed to suspend driver",
+        description: error.response?.data?.error || "Could not suspend driver.",
+      });
+    }
+  };
+
   const getStatusBadge = (status: Driver["status"]) => {
     switch (status) {
       case "AVAILABLE":
@@ -135,6 +170,8 @@ export default function Drivers() {
         return <Badge className="bg-blue-500 hover:bg-blue-600">On Trip</Badge>;
       case "OFF_DUTY":
         return <Badge variant="secondary">Off Duty</Badge>;
+      case "SUSPENDED":
+        return <Badge variant="destructive">Suspended</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -233,6 +270,7 @@ export default function Drivers() {
               <TableHead>Contact</TableHead>
               <TableHead>Safety Score</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead className="w-[80px]"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -245,11 +283,12 @@ export default function Drivers() {
                   <TableCell><Skeleton className="h-4 w-24" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-12" /></TableCell>
                   <TableCell><Skeleton className="h-6 w-24 rounded-full" /></TableCell>
+                  <TableCell><Skeleton className="h-8 w-8 rounded-md" /></TableCell>
                 </TableRow>
               ))
             ) : drivers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="h-24 text-center">
+                <TableCell colSpan={7} className="h-24 text-center">
                   No drivers found.
                 </TableCell>
               </TableRow>
@@ -264,6 +303,20 @@ export default function Drivers() {
                     {driver.safetyScore}%
                   </TableCell>
                   <TableCell>{getStatusBadge(driver.status)}</TableCell>
+                  <TableCell>
+                    {(user?.role === "FLEET_MANAGER" || user?.role === "SAFETY_OFFICER") && (
+                      <div className="flex gap-2">
+                        {driver.status !== "SUSPENDED" && driver.status !== "ON_TRIP" && (
+                          <Button variant="ghost" size="icon" onClick={() => handleSuspend(driver.id)} title="Suspend driver" className="text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800">
+                            <Ban className="h-4 w-4" />
+                          </Button>
+                        )}
+                        <Button variant="ghost" size="icon" onClick={() => handleDelete(driver.id)} title="Delete driver" className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    )}
+                  </TableCell>
                 </TableRow>
               ))
             )}

@@ -28,7 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../components/ui/select";
-import { RefreshCw, Plus, Trash2 } from "lucide-react";
+import { RefreshCw, Plus, Trash2, Archive } from "lucide-react";
 import { motion } from "framer-motion";
 import { useToast } from "../hooks/use-toast";
 import { Skeleton } from "../components/ui/skeleton";
@@ -156,6 +156,23 @@ export default function Vehicles() {
         variant: "destructive",
         title: "Failed to delete vehicle",
         description: error.response?.data?.error || "Could not delete vehicle.",
+      });
+    }
+  };
+
+  const handleRetire = async (id: number) => {
+    try {
+      await api.put(`/vehicles/${id}/retire`);
+      toast({
+        title: "Retired",
+        description: "Vehicle has been retired.",
+      });
+      fetchVehicles();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Failed to retire vehicle",
+        description: error.response?.data?.error || "Could not retire vehicle.",
       });
     }
   };
@@ -345,9 +362,16 @@ export default function Vehicles() {
                   <TableCell>{getStatusBadge(vehicle.status)}</TableCell>
                   <TableCell>
                     {user?.role === "FLEET_MANAGER" && (
-                      <Button variant="ghost" size="icon" onClick={() => handleDelete(vehicle.id)} title="Delete vehicle" className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <div className="flex gap-2">
+                        {vehicle.status !== "RETIRED" && vehicle.status !== "ON_TRIP" && (
+                          <Button variant="ghost" size="icon" onClick={() => handleRetire(vehicle.id)} title="Retire vehicle" className="text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800">
+                            <Archive className="h-4 w-4" />
+                          </Button>
+                        )}
+                        <Button variant="ghost" size="icon" onClick={() => handleDelete(vehicle.id)} title="Delete vehicle" className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     )}
                   </TableCell>
                 </TableRow>

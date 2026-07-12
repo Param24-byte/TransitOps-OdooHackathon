@@ -1,10 +1,10 @@
 // src/controllers/fuel.controller.ts
 
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { fuelService } from "../services/fuel.service";
 
 export const fuelController = {
-  async getAll(req: Request, res: Response): Promise<void> {
+  async getAll(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const vehicleId = req.query.vehicleId
         ? parseInt(req.query.vehicleId as string)
@@ -17,12 +17,15 @@ export const fuelController = {
         data: logs,
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to retrieve fuel logs.";
-      res.status(500).json({ success: false, message });
+      if (error instanceof Error && error.name === "Error") {
+        res.status(500).json({ success: false, message: error.message });
+      } else {
+        next(error);
+      }
     }
   },
 
-  async create(req: Request, res: Response): Promise<void> {
+  async create(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const log = await fuelService.create(req.body);
 
@@ -32,12 +35,15 @@ export const fuelController = {
         data: log,
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to create fuel log.";
-      res.status(400).json({ success: false, message });
+      if (error instanceof Error && error.name === "Error") {
+        res.status(400).json({ success: false, message: error.message });
+      } else {
+        next(error);
+      }
     }
   },
 
-  async getEfficiencyStats(_req: Request, res: Response): Promise<void> {
+  async getEfficiencyStats(_req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const stats = await fuelService.getEfficiencyStats();
 
@@ -47,12 +53,15 @@ export const fuelController = {
         data: stats,
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to retrieve stats.";
-      res.status(500).json({ success: false, message });
+      if (error instanceof Error && error.name === "Error") {
+        res.status(500).json({ success: false, message: error.message });
+      } else {
+        next(error);
+      }
     }
   },
 
-  async delete(req: Request, res: Response): Promise<void> {
+  async delete(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const id = parseInt(req.params.id as string);
       if (isNaN(id)) {
@@ -67,8 +76,11 @@ export const fuelController = {
         message: "Fuel log deleted.",
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to delete fuel log.";
-      res.status(400).json({ success: false, message });
+      if (error instanceof Error && error.name === "Error") {
+        res.status(400).json({ success: false, message: error.message });
+      } else {
+        next(error);
+      }
     }
   },
 };

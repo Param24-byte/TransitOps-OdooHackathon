@@ -1,11 +1,11 @@
 // src/controllers/vehicle.controller.ts
 
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { vehicleService } from "../services/vehicle.service";
 import { VehicleStatus } from "@prisma/client";
 
 export const vehicleController = {
-  async getAll(req: Request, res: Response): Promise<void> {
+  async getAll(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const status = req.query.status as VehicleStatus | undefined;
       const region = req.query.region as string | undefined;
@@ -17,12 +17,15 @@ export const vehicleController = {
         data: vehicles,
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to retrieve vehicles.";
-      res.status(500).json({ success: false, message });
+      if (error instanceof Error && error.name === "Error") {
+        res.status(500).json({ success: false, message: error.message });
+      } else {
+        next(error);
+      }
     }
   },
 
-  async getById(req: Request, res: Response): Promise<void> {
+  async getById(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const id = parseInt(req.params.id as string);
       if (isNaN(id)) {
@@ -38,12 +41,15 @@ export const vehicleController = {
         data: vehicle,
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to retrieve vehicle.";
-      res.status(404).json({ success: false, message });
+      if (error instanceof Error && error.name === "Error") {
+        res.status(404).json({ success: false, message: error.message });
+      } else {
+        next(error);
+      }
     }
   },
 
-  async create(req: Request, res: Response): Promise<void> {
+  async create(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const vehicle = await vehicleService.create(req.body);
 
@@ -53,12 +59,15 @@ export const vehicleController = {
         data: vehicle,
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to create vehicle.";
-      res.status(400).json({ success: false, message });
+      if (error instanceof Error && error.name === "Error") {
+        res.status(400).json({ success: false, message: error.message });
+      } else {
+        next(error);
+      }
     }
   },
 
-  async update(req: Request, res: Response): Promise<void> {
+  async update(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const id = parseInt(req.params.id as string);
       if (isNaN(id)) {
@@ -74,12 +83,15 @@ export const vehicleController = {
         data: vehicle,
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to update vehicle.";
-      res.status(400).json({ success: false, message });
+      if (error instanceof Error && error.name === "Error") {
+        res.status(400).json({ success: false, message: error.message });
+      } else {
+        next(error);
+      }
     }
   },
 
-  async delete(req: Request, res: Response): Promise<void> {
+  async delete(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const id = parseInt(req.params.id as string);
       if (isNaN(id)) {
@@ -94,12 +106,38 @@ export const vehicleController = {
         message: "Vehicle deleted successfully.",
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to delete vehicle.";
-      res.status(400).json({ success: false, message });
+      if (error instanceof Error && error.name === "Error") {
+        res.status(400).json({ success: false, message: error.message });
+      } else {
+        next(error);
+      }
     }
   },
 
-  async getStats(req: Request, res: Response): Promise<void> {
+  async retire(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const id = parseInt(req.params.id as string);
+      if (isNaN(id)) {
+        res.status(400).json({ success: false, message: "Invalid vehicle ID." });
+        return;
+      }
+
+      await vehicleService.retire(id);
+
+      res.status(200).json({
+        success: true,
+        message: "Vehicle retired successfully.",
+      });
+    } catch (error) {
+      if (error instanceof Error && error.name === "Error") {
+        res.status(400).json({ success: false, message: error.message });
+      } else {
+        next(error);
+      }
+    }
+  },
+
+  async getStats(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const region = req.query.region as string | undefined;
       const stats = await vehicleService.getStats(region);
@@ -110,8 +148,11 @@ export const vehicleController = {
         data: stats,
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to retrieve stats.";
-      res.status(500).json({ success: false, message });
+      if (error instanceof Error && error.name === "Error") {
+        res.status(500).json({ success: false, message: error.message });
+      } else {
+        next(error);
+      }
     }
   },
 };

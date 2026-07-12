@@ -89,10 +89,8 @@ export const driverService = {
     data: Partial<{
       name: string;
       licenseCategory: string;
-      licenseExpiry: string;
       contactNumber: string;
       safetyScore: number;
-      status: DriverStatus;
     }>
   ) {
     const driver = await prisma.driver.findUnique({ where: { id } });
@@ -101,15 +99,7 @@ export const driverService = {
       throw new Error("Driver not found.");
     }
 
-    // If updating license expiry, ensure new date is valid
     const updateData: Record<string, unknown> = { ...data };
-    if (data.licenseExpiry) {
-      const expiryDate = new Date(data.licenseExpiry);
-      if (expiryDate <= new Date()) {
-        throw new Error("License expiry date must be in the future.");
-      }
-      updateData.licenseExpiry = expiryDate;
-    }
 
     return prisma.driver.update({
       where: { id },
@@ -121,7 +111,14 @@ export const driverService = {
    * Delete a driver. Only allowed if the driver is not ON_TRIP.
    */
   async delete(id: number) {
-    const driver = await prisma.driver.findUnique({ where: { id } });
+    const driver = await prisma.driver.findUnique({ 
+      where: { id },
+      include: {
+        _count: {
+          select: { trips: true }
+        }
+      }
+    });
 
     if (!driver) {
       throw new Error("Driver not found.");
@@ -131,7 +128,31 @@ export const driverService = {
       throw new Error("Cannot delete a driver that is currently on a trip.");
     }
 
+    if (driver._count.trips > 0) {
+      throw new Error("Cannot delete a driver with trip history. Consider marking them SUSPENDED or OFF_DUTY instead.");
+    }
+
     return prisma.driver.delete({ where: { id } });
+  },
+
+  /**
+   * Suspend a driver. Sets status to SUSPENDED. Not allowed if ON_TRIP.
+   */
+  async suspend(id: number) {
+    const driver = await prisma.driver.findUnique({ where: { id } });
+
+    if (!driver) {
+      throw new Error("Driver not found.");
+    }
+
+    if (driver.status === "ON_TRIP") {
+      throw new Error("Cannot suspend a driver that is currently on a trip.");
+    }
+
+    return prisma.driver.update({
+      where: { id },
+      data: { status: "SUSPENDED" },
+    });
   },
 
   /**
