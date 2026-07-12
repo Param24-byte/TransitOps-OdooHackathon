@@ -86,7 +86,7 @@ export const tripController = {
         return;
       }
 
-      const trip = await tripService.complete(id);
+      const trip = await tripService.complete(id, req.body);
 
       res.status(200).json({
         success: true,

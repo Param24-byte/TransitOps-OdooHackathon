@@ -22,6 +22,7 @@ import tripRoutes from "./routes/trip.routes";
 import maintenanceRoutes from "./routes/maintenance.routes";
 import fuelRoutes from "./routes/fuel.routes";
 import expenseRoutes from "./routes/expense.routes";
+import reportsRoutes from "./routes/reports.routes";
 
 // Middleware imports
 import { errorHandler } from "./middleware/errorHandler";
@@ -50,6 +51,7 @@ app.use("/api/trips", tripRoutes);
 app.use("/api/maintenance", maintenanceRoutes);
 app.use("/api/fuel", fuelRoutes);
 app.use("/api/expenses", expenseRoutes);
+app.use("/api/reports", reportsRoutes);
 
 // Health check endpoint (useful for Docker/deployment verification)
 app.get("/api/health", (_req, res) => {

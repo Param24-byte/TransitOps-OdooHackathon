@@ -27,7 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../components/ui/select";
-import { Wrench, Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { useToast } from "../hooks/use-toast";
 import { Skeleton } from "../components/ui/skeleton";
 import { useForm } from "react-hook-form";

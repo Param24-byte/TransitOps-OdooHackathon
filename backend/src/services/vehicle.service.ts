@@ -10,9 +10,12 @@ export const vehicleService = {
    * Get all vehicles with optional status filter.
    * Includes a count of related trips for dashboard metrics.
    */
-  async getAll(status?: VehicleStatus) {
+  async getAll(status?: VehicleStatus, region?: string) {
     return prisma.vehicle.findMany({
-      where: status ? { status } : undefined,
+      where: {
+        ...(status ? { status } : {}),
+        ...(region ? { region } : {}),
+      },
       include: {
         _count: {
           select: { trips: true, maintenanceLogs: true, fuelLogs: true },
@@ -61,6 +64,7 @@ export const vehicleService = {
     capacity: number;
     odometer: number;
     acquisitionCost: number;
+    region?: string;
   }) {
     // Check for duplicate registration number
     const existing = await prisma.vehicle.findUnique({

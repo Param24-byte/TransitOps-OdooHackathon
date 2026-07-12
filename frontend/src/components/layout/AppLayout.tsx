@@ -10,7 +10,8 @@ import {
   LogOut,
   Menu,
   Wrench,
-  DollarSign
+  DollarSign,
+  BarChart2
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "../../lib/utils";
@@ -24,6 +25,7 @@ const navigation = [
   { name: "Trips", href: "/trips", icon: Map },
   { name: "Maintenance", href: "/maintenance", icon: Wrench },
   { name: "Expenses", href: "/expenses", icon: DollarSign },
+  { name: "Reports", href: "/reports", icon: BarChart2 },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 

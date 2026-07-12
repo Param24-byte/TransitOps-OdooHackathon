@@ -8,7 +8,8 @@ export const vehicleController = {
   async getAll(req: Request, res: Response): Promise<void> {
     try {
       const status = req.query.status as VehicleStatus | undefined;
-      const vehicles = await vehicleService.getAll(status);
+      const region = req.query.region as string | undefined;
+      const vehicles = await vehicleService.getAll(status, region);
 
       res.status(200).json({
         success: true,

@@ -180,7 +180,7 @@ export const tripService = {
    * Complete a trip: DISPATCHED → COMPLETED.
    * Releases the vehicle and driver back to AVAILABLE.
    */
-  async complete(id: number) {
+  async complete(id: number, data?: { actualDistance?: number; revenue?: number }) {
     return prisma.$transaction(async (tx) => {
       const trip = await tx.trip.findUnique({
         where: { id },
@@ -195,7 +195,12 @@ export const tripService = {
       const [updatedTrip] = await Promise.all([
         tx.trip.update({
           where: { id },
-          data: { status: "COMPLETED" },
+          data: { 
+            status: "COMPLETED",
+            actualDistance: data?.actualDistance,
+            revenue: data?.revenue,
+            completedAt: new Date()
+          },
           include: {
             vehicle: { select: { registrationNo: true, name: true } },
             driver: { select: { name: true } },

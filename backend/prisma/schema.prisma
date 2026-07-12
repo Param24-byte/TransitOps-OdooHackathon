@@ -32,6 +32,7 @@ model Vehicle {
   odometer        Float
   acquisitionCost Float
   status          VehicleStatus     @default(AVAILABLE)
+  region          String?
   trips           Trip[]
   maintenanceLogs MaintenanceLog[]
   fuelLogs        FuelLog[]
@@ -74,6 +75,9 @@ model Trip {
   destination     String
   cargoWeight     Float
   plannedDistance Float
+  actualDistance  Float?
+  revenue         Float?
+  completedAt     DateTime?
   status          TripStatus @default(DRAFT)
   vehicleId       Int
   vehicle         Vehicle    @relation(fields: [vehicleId], references: [id])

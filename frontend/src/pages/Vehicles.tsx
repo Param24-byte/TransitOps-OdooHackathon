@@ -46,6 +46,7 @@ interface Vehicle {
   capacity: number;
   odometer: number;
   acquisitionCost: number;
+  region?: string;
   status: "AVAILABLE" | "IN_SHOP" | "ON_TRIP" | "RETIRED";
 }
 
@@ -59,6 +60,7 @@ const vehicleSchema = z.object({
   capacity: z.coerce.number().min(100, "Capacity must be at least 100 kg").max(50000, "Capacity is too large"),
   odometer: z.coerce.number().min(0, "Odometer cannot be negative"),
   acquisitionCost: z.coerce.number().min(0, "Cost cannot be negative"),
+  region: z.string().optional(),
 });
 
 type VehicleFormValues = z.infer<typeof vehicleSchema>;
@@ -67,12 +69,13 @@ export default function Vehicles() {
   const { user } = useAuth();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
+  const [regionFilter, setRegionFilter] = useState<string>("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
   const form = useForm<VehicleFormValues>({
-    resolver: zodResolver(vehicleSchema),
+    resolver: zodResolver(vehicleSchema) as any,
     defaultValues: {
       registrationNo: "",
       name: "",
@@ -80,13 +83,15 @@ export default function Vehicles() {
       capacity: 0,
       odometer: 0,
       acquisitionCost: 0,
+      region: "",
     },
   });
 
   const fetchVehicles = async () => {
     setLoading(true);
     try {
-      const response = await api.get("/vehicles");
+      const regionQuery = regionFilter !== "all" ? `?region=${regionFilter}` : "";
+      const response = await api.get(`/vehicles${regionQuery}`);
       setVehicles(response.data.data);
     } catch (error) {
       toast({
@@ -101,7 +106,7 @@ export default function Vehicles() {
 
   useEffect(() => {
     fetchVehicles();
-  }, []);
+  }, [regionFilter]);
 
   const onSubmit = async (data: VehicleFormValues) => {
     setIsSubmitting(true);
@@ -166,6 +171,20 @@ export default function Vehicles() {
           <p className="text-slate-500 mt-2">Manage your fleet and their current statuses.</p>
         </div>
         <div className="flex gap-4">
+          <div className="w-48">
+            <Select value={regionFilter} onValueChange={setRegionFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="All Regions" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Regions</SelectItem>
+                <SelectItem value="North">North</SelectItem>
+                <SelectItem value="South">South</SelectItem>
+                <SelectItem value="East">East</SelectItem>
+                <SelectItem value="West">West</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <Button variant="outline" onClick={fetchVehicles} disabled={loading}>
             <RefreshCw className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`} />
             Refresh
@@ -185,7 +204,7 @@ export default function Vehicles() {
                   Enter the vehicle details to add it to the fleet.
                 </DialogDescription>
               </DialogHeader>
-              <form onSubmit={form.handleSubmit(onSubmit)}>
+              <form onSubmit={form.handleSubmit(onSubmit as any)}>
                 <div className="grid gap-4 py-4">
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="registrationNo" className="text-right">Reg. No</Label>
@@ -236,6 +255,20 @@ export default function Vehicles() {
                       {form.formState.errors.acquisitionCost && <p className="text-sm text-red-500 mt-1">{form.formState.errors.acquisitionCost.message}</p>}
                     </div>
                   </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="region" className="text-right">Region</Label>
+                    <div className="col-span-3">
+                      <Select value={form.watch("region")} onValueChange={(val: any) => form.setValue("region", val)}>
+                        <SelectTrigger><SelectValue placeholder="Select region" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="North">North</SelectItem>
+                          <SelectItem value="South">South</SelectItem>
+                          <SelectItem value="East">East</SelectItem>
+                          <SelectItem value="West">West</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
                 </div>
                 <DialogFooter>
                   <Button type="submit" disabled={isSubmitting}>
@@ -258,6 +291,7 @@ export default function Vehicles() {
               <TableHead>Type</TableHead>
               <TableHead>Capacity</TableHead>
               <TableHead>Odometer</TableHead>
+              <TableHead>Region</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="w-[80px]"></TableHead>
             </TableRow>
@@ -271,13 +305,14 @@ export default function Vehicles() {
                   <TableCell><Skeleton className="h-4 w-20" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-16" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-16" /></TableCell>
                   <TableCell><Skeleton className="h-6 w-24 rounded-full" /></TableCell>
                   <TableCell><Skeleton className="h-8 w-8 rounded-md" /></TableCell>
                 </TableRow>
               ))
             ) : vehicles.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="h-24 text-center">
+                <TableCell colSpan={8} className="h-24 text-center">
                   No vehicles found.
                 </TableCell>
               </TableRow>
@@ -289,6 +324,7 @@ export default function Vehicles() {
                   <TableCell>{vehicle.type}</TableCell>
                   <TableCell>{vehicle.capacity.toLocaleString()}</TableCell>
                   <TableCell>{vehicle.odometer.toLocaleString()}</TableCell>
+                  <TableCell>{vehicle.region || "-"}</TableCell>
                   <TableCell>{getStatusBadge(vehicle.status)}</TableCell>
                   <TableCell>
                     {user?.role === "FLEET_MANAGER" && (

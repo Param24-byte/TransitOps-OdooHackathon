@@ -78,6 +78,7 @@ export default function Trips() {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [completeTripId, setCompleteTripId] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Data for form selects
@@ -96,6 +97,13 @@ export default function Trips() {
       cargoWeight: 0,
       plannedDistance: 0,
     },
+  });
+
+  const completeForm = useForm({
+    defaultValues: {
+      actualDistance: 0,
+      revenue: 0,
+    }
   });
 
   const fetchTrips = async () => {
@@ -191,6 +199,29 @@ export default function Trips() {
         title: "Action Failed",
         description: error.response?.data?.error || "Could not update trip status.",
       });
+    }
+  };
+
+  const handleCompleteTrip = async (data: { actualDistance: number, revenue: number }) => {
+    if (!completeTripId) return;
+    setIsSubmitting(true);
+    try {
+      await api.patch(`/trips/${completeTripId}/complete`, data);
+      toast({
+        title: "Trip Updated",
+        description: "Trip successfully completed.",
+      });
+      setCompleteTripId(null);
+      completeForm.reset();
+      fetchTrips();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Action Failed",
+        description: error.response?.data?.error || "Could not complete trip.",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -378,8 +409,9 @@ export default function Trips() {
                           </DropdownMenuItem>
                         )}
                         
+                        
                         {(user?.role === "FLEET_MANAGER" || user?.role === "DRIVER") && trip.status === "DISPATCHED" && (
-                          <DropdownMenuItem onClick={() => handleStatusChange(trip.id, "complete")}>
+                          <DropdownMenuItem onClick={() => setCompleteTripId(trip.id)}>
                             <CheckCircle2 className="mr-2 h-4 w-4" />
                             Mark Completed
                           </DropdownMenuItem>
@@ -395,6 +427,40 @@ export default function Trips() {
           </TableBody>
         </Table>
       </div>
+
+      {/* Complete Trip Dialog */}
+      <Dialog open={completeTripId !== null} onOpenChange={(open) => !open && setCompleteTripId(null)}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Complete Trip</DialogTitle>
+            <DialogDescription>
+              Enter the final metrics for this trip to mark it as completed.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={completeForm.handleSubmit(handleCompleteTrip)}>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="actualDistance" className="text-right">Actual Dist. (km)</Label>
+                <div className="col-span-3">
+                  <Input id="actualDistance" type="number" {...completeForm.register("actualDistance", { valueAsNumber: true })} />
+                </div>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="revenue" className="text-right">Revenue (₹)</Label>
+                <div className="col-span-3">
+                  <Input id="revenue" type="number" {...completeForm.register("revenue", { valueAsNumber: true })} />
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setCompleteTripId(null)}>Cancel</Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Saving..." : "Complete Trip"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

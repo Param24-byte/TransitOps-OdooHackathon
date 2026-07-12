@@ -6,8 +6,15 @@ import {
   CardHeader,
   CardTitle,
 } from "../components/ui/card";
-import { Truck, Map, AlertTriangle, IndianRupee } from "lucide-react";
+import { Truck, Map, AlertTriangle, IndianRupee, Users, Clock } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
 
 import {
   BarChart,
@@ -27,15 +34,18 @@ export default function Dashboard() {
   const { user } = useAuth();
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [regionFilter, setRegionFilter] = useState<string>("all");
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const [vehiclesRes, tripsRes, expensesRes, utilRes] = await Promise.all([
-          api.get("/vehicles/stats"),
+        const regionQuery = regionFilter !== "all" ? `?region=${regionFilter}` : "";
+        const [vehiclesRes, tripsRes, expensesRes, utilRes, driversRes] = await Promise.all([
+          api.get(`/vehicles/stats${regionQuery}`),
           api.get("/trips/stats"),
           api.get("/expenses/summary?period=month"),
-          api.get("/trips/utilization-chart")
+          api.get("/trips/utilization-chart"),
+          api.get("/drivers/stats")
         ]);
         
         setStats({
@@ -43,6 +53,7 @@ export default function Dashboard() {
           trips: tripsRes.data.data,
           expenses: expensesRes.data.data,
           utilization: utilRes.data.data,
+          drivers: driversRes.data.data,
         });
       } catch (error) {
         console.error("Failed to fetch dashboard stats", error);
@@ -52,7 +63,7 @@ export default function Dashboard() {
     };
 
     fetchStats();
-  }, []);
+  }, [regionFilter]);
 
   if (loading) {
     return <div className="p-8">Loading dashboard data...</div>;
@@ -60,14 +71,30 @@ export default function Dashboard() {
 
   return (
     <div className="p-8 space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Overview</h1>
-        <p className="text-slate-500 mt-2">
-          Welcome back, {user?.name}. Here's what's happening today.
-        </p>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Overview</h1>
+          <p className="text-slate-500 mt-2">
+            Welcome back, {user?.name}. Here's what's happening today.
+          </p>
+        </div>
+        <div className="w-48">
+          <Select value={regionFilter} onValueChange={setRegionFilter}>
+            <SelectTrigger>
+              <SelectValue placeholder="All Regions" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Regions</SelectItem>
+              <SelectItem value="North">North</SelectItem>
+              <SelectItem value="South">South</SelectItem>
+              <SelectItem value="East">East</SelectItem>
+              <SelectItem value="West">West</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
         {/* Vehicles Card */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -106,6 +133,34 @@ export default function Dashboard() {
             <div className="text-2xl font-bold">{stats?.vehicles?.inShop || 0}</div>
             <p className="text-xs text-slate-500">
               Vehicles currently in shop
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Pending Trips Card */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Pending Trips</CardTitle>
+            <Clock className="h-4 w-4 text-slate-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats?.trips?.draft || 0}</div>
+            <p className="text-xs text-slate-500">
+              Trips awaiting dispatch
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Drivers On Duty Card */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Drivers On Duty</CardTitle>
+            <Users className="h-4 w-4 text-slate-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats?.drivers?.onTrip || 0}</div>
+            <p className="text-xs text-slate-500">
+              Drivers currently active
             </p>
           </CardContent>
         </Card>
