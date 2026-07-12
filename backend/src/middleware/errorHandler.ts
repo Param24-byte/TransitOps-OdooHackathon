@@ -10,6 +10,8 @@
 import { Request, Response, NextFunction } from "express";
 import { ApiResponse } from "../types";
 
+import { Prisma } from "@prisma/client";
+
 export const errorHandler = (
   err: Error,
   _req: Request,
@@ -17,13 +19,25 @@ export const errorHandler = (
   _next: NextFunction
 ): void => {
   console.error(`[ERROR] ${err.message}`);
-  console.error(err.stack);
+  if (process.env.NODE_ENV === "development") {
+    console.error(err.stack);
+  }
 
-  const statusCode = res.statusCode !== 200 ? res.statusCode : 500;
+  let statusCode = res.statusCode !== 200 ? res.statusCode : 500;
+  let message = err.message || "Internal Server Error";
+
+  if (err instanceof Prisma.PrismaClientKnownRequestError) {
+    statusCode = 400;
+    if (err.code === "P2002") {
+      message = "A record with this unique value already exists.";
+    } else {
+      message = "A database constraint violation occurred.";
+    }
+  }
 
   const response: ApiResponse = {
     success: false,
-    message: err.message || "Internal Server Error",
+    message,
   };
 
   // In production, never expose stack traces

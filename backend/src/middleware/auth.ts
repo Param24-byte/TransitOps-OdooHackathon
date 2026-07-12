@@ -15,6 +15,9 @@ import { Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { AuthRequest } from "../types";
 
+if (!process.env.JWT_SECRET && process.env.NODE_ENV === "production") {
+  throw new Error("JWT_SECRET must be set in production.");
+}
 const JWT_SECRET = process.env.JWT_SECRET || "fallback_secret";
 
 // Middleware: Verify that the request has a valid JWT token

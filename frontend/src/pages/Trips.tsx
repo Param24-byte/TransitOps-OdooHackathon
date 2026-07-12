@@ -36,7 +36,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../components/ui/dropdown-menu";
-import { RefreshCw, MapPin, MoreHorizontal, CheckCircle2, Navigation } from "lucide-react";
+import { RefreshCw, MapPin, MoreHorizontal, CheckCircle2, Navigation, XCircle } from "lucide-react";
 import { useToast } from "../hooks/use-toast";
 import socket from "../lib/socket";
 import { Skeleton } from "../components/ui/skeleton";
@@ -185,7 +185,7 @@ export default function Trips() {
     }
   };
 
-  const handleStatusChange = async (id: number, action: "dispatch" | "complete") => {
+  const handleStatusChange = async (id: number, action: "dispatch" | "complete" | "cancel") => {
     try {
       await api.patch(`/trips/${id}/${action}`);
       toast({
@@ -414,6 +414,20 @@ export default function Trips() {
                           <DropdownMenuItem onClick={() => setCompleteTripId(trip.id)}>
                             <CheckCircle2 className="mr-2 h-4 w-4" />
                             Mark Completed
+                          </DropdownMenuItem>
+                        )}
+                        
+                        {(user?.role === "FLEET_MANAGER" || user?.role === "DRIVER") && trip.status === "DISPATCHED" && (
+                          <DropdownMenuItem 
+                            onClick={() => {
+                              if (confirm("Are you sure you want to cancel this trip?")) {
+                                handleStatusChange(trip.id, "cancel");
+                              }
+                            }}
+                            className="text-red-500 focus:text-red-500 focus:bg-red-50 dark:focus:bg-red-950"
+                          >
+                            <XCircle className="mr-2 h-4 w-4" />
+                            Cancel Trip
                           </DropdownMenuItem>
                         )}
                         

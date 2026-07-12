@@ -133,17 +133,25 @@ export const tripService = {
         throw new Error(`Cannot dispatch a trip with status "${trip.status}". Must be DRAFT.`);
       }
 
-      // BUSINESS RULE: Vehicle must be AVAILABLE
-      if (trip.vehicle.status !== "AVAILABLE") {
+      // BUSINESS RULE: Vehicle must be AVAILABLE and updated atomically
+      const vehicleUpdate = await tx.vehicle.updateMany({
+        where: { id: trip.vehicleId, status: "AVAILABLE" },
+        data: { status: "ON_TRIP" },
+      });
+      if (vehicleUpdate.count === 0) {
         throw new Error(
-          `Vehicle ${trip.vehicle.registrationNo} is currently "${trip.vehicle.status}". Must be AVAILABLE.`
+          `Vehicle ${trip.vehicle.registrationNo} is currently not AVAILABLE or was dispatched concurrently.`
         );
       }
 
-      // BUSINESS RULE: Driver must be AVAILABLE
-      if (trip.driver.status !== "AVAILABLE") {
+      // BUSINESS RULE: Driver must be AVAILABLE and updated atomically
+      const driverUpdate = await tx.driver.updateMany({
+        where: { id: trip.driverId, status: "AVAILABLE" },
+        data: { status: "ON_TRIP" },
+      });
+      if (driverUpdate.count === 0) {
         throw new Error(
-          `Driver ${trip.driver.name} is currently "${trip.driver.status}". Must be AVAILABLE.`
+          `Driver ${trip.driver.name} is currently not AVAILABLE or was dispatched concurrently.`
         );
       }
 
@@ -152,24 +160,14 @@ export const tripService = {
       }
 
       // All checks passed — execute the state transitions atomically
-      const [updatedTrip] = await Promise.all([
-        tx.trip.update({
-          where: { id },
-          data: { status: "DISPATCHED" },
-          include: {
-            vehicle: { select: { registrationNo: true, name: true } },
-            driver: { select: { name: true } },
-          },
-        }),
-        tx.vehicle.update({
-          where: { id: trip.vehicleId },
-          data: { status: "ON_TRIP" },
-        }),
-        tx.driver.update({
-          where: { id: trip.driverId },
-          data: { status: "ON_TRIP" },
-        }),
-      ]);
+      const updatedTrip = await tx.trip.update({
+        where: { id },
+        data: { status: "DISPATCHED" },
+        include: {
+          vehicle: { select: { registrationNo: true, name: true } },
+          driver: { select: { name: true } },
+        },
+      });
 
       io.emit("tripUpdated", { action: "dispatch", trip: updatedTrip });
       return updatedTrip;

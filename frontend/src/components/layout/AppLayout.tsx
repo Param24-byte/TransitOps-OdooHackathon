@@ -25,7 +25,7 @@ const navigation = [
   { name: "Trips", href: "/trips", icon: Map },
   { name: "Maintenance", href: "/maintenance", icon: Wrench },
   { name: "Expenses", href: "/expenses", icon: DollarSign },
-  { name: "Reports", href: "/reports", icon: BarChart2 },
+  { name: "Reports", href: "/reports", icon: BarChart2, roles: ["FLEET_MANAGER", "FINANCIAL_ANALYST"] },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 
@@ -65,6 +65,9 @@ export default function AppLayout() {
         <div className="flex-1 overflow-y-auto py-4">
           <nav className="space-y-1 px-3">
             {navigation.map((item) => {
+              if (item.roles && user?.role && !item.roles.includes(user.role)) {
+                return null;
+              }
               const isActive = location.pathname === item.href;
               return (
                 <Link

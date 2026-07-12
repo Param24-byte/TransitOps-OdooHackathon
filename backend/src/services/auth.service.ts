@@ -9,6 +9,9 @@ import jwt from "jsonwebtoken";
 import prisma from "../lib/prisma";
 import { Role } from "@prisma/client";
 
+if (!process.env.JWT_SECRET && process.env.NODE_ENV === "production") {
+  throw new Error("JWT_SECRET must be set in production.");
+}
 const JWT_SECRET = process.env.JWT_SECRET || "fallback_secret";
 const SALT_ROUNDS = 10; // bcrypt cost factor: 2^10 = 1024 iterations
 
