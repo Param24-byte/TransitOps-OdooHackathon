@@ -27,7 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../components/ui/select";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Fuel } from "lucide-react";
 import { isAxiosError } from "axios";
 import { useToast } from "../hooks/use-toast";
 import { Skeleton } from "../components/ui/skeleton";
@@ -57,12 +57,23 @@ const expenseSchema = z.object({
 
 type ExpenseFormValues = z.infer<typeof expenseSchema>;
 
+const fuelSchema = z.object({
+  date: z.string().min(1, "Date is required"),
+  liters: z.number({ message: "Liters must be a valid number" }).min(0, "Liters cannot be negative"),
+  cost: z.number({ message: "Cost must be a valid number" }).min(0, "Cost cannot be negative"),
+  vehicleId: z.string().min(1, "Vehicle is required"),
+});
+
+type FuelFormValues = z.infer<typeof fuelSchema>;
+
 export default function Expenses() {
   const { user } = useAuth();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isFuelDialogOpen, setIsFuelDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isFuelSubmitting, setIsFuelSubmitting] = useState(false);
   const { toast } = useToast();
 
   const form = useForm<ExpenseFormValues>({
@@ -72,6 +83,16 @@ export default function Expenses() {
       type: "OTHER",
       description: "",
       amount: 0,
+      vehicleId: "",
+    },
+  });
+
+  const fuelForm = useForm<FuelFormValues>({
+    resolver: zodResolver(fuelSchema),
+    defaultValues: {
+      date: new Date().toISOString().split('T')[0],
+      liters: 0,
+      cost: 0,
       vehicleId: "",
     },
   });
@@ -139,6 +160,35 @@ export default function Expenses() {
     }
   };
 
+  const onFuelSubmit = async (data: FuelFormValues) => {
+    setIsFuelSubmitting(true);
+    try {
+      await api.post("/fuel", {
+        ...data,
+        vehicleId: Number(data.vehicleId),
+      });
+      toast({
+        title: "Success",
+        description: "Fuel log added.",
+      });
+      setIsFuelDialogOpen(false);
+      fuelForm.reset({
+        date: new Date().toISOString().split('T')[0],
+        liters: 0,
+        cost: 0,
+        vehicleId: "",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Failed to add fuel log",
+        description: isAxiosError(error) ? (error.response?.data?.message || error.response?.data?.error || "Could not add fuel log.") : "Could not add fuel log.",
+      });
+    } finally {
+      setIsFuelSubmitting(false);
+    }
+  };
+
   const handleDelete = async (id: number) => {
     if (!confirm("Are you sure you want to delete this expense?")) return;
     
@@ -167,12 +217,76 @@ export default function Expenses() {
         </div>
 
         {(user?.role === "FLEET_MANAGER" || user?.role === "FINANCIAL_ANALYST") && (
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" /> Add Expense
-              </Button>
-            </DialogTrigger>
+          <div className="flex gap-2">
+            <Dialog open={isFuelDialogOpen} onOpenChange={setIsFuelDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="secondary">
+                  <Fuel className="mr-2 h-4 w-4" /> Log Fuel
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Log Fuel Usage</DialogTitle>
+                  <DialogDescription>
+                    Record fuel consumption for a vehicle.
+                  </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={fuelForm.handleSubmit(onFuelSubmit)}>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="fuel-date" className="text-right">Date</Label>
+                      <div className="col-span-3">
+                        <Input id="fuel-date" type="date" {...fuelForm.register("date")} />
+                        {fuelForm.formState.errors.date && <p className="text-sm text-red-500 mt-1">{fuelForm.formState.errors.date.message}</p>}
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="fuel-vehicle" className="text-right">Vehicle</Label>
+                      <div className="col-span-3">
+                        <Select value={fuelForm.watch("vehicleId")} onValueChange={(val: any) => fuelForm.setValue("vehicleId", val)}>
+                          <SelectTrigger><SelectValue placeholder="Select vehicle" /></SelectTrigger>
+                          <SelectContent>
+                            {availableVehicles.map(v => (
+                              <SelectItem key={v.id} value={v.id.toString()}>{v.registrationNo}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {fuelForm.formState.errors.vehicleId && <p className="text-sm text-red-500 mt-1">{fuelForm.formState.errors.vehicleId.message}</p>}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="liters" className="text-right">Liters</Label>
+                      <div className="col-span-3">
+                        <Input id="liters" type="number" step="any" {...fuelForm.register("liters", { valueAsNumber: true })} placeholder="40" />
+                        {fuelForm.formState.errors.liters && <p className="text-sm text-red-500 mt-1">{fuelForm.formState.errors.liters.message}</p>}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="fuel-cost" className="text-right">Cost (₹)</Label>
+                      <div className="col-span-3">
+                        <Input id="fuel-cost" type="number" step="any" {...fuelForm.register("cost", { valueAsNumber: true })} placeholder="4000" />
+                        {fuelForm.formState.errors.cost && <p className="text-sm text-red-500 mt-1">{fuelForm.formState.errors.cost.message}</p>}
+                      </div>
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button type="submit" disabled={isFuelSubmitting}>
+                      {isFuelSubmitting ? "Saving..." : "Save Fuel Log"}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
+
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="mr-2 h-4 w-4" /> Add Expense
+                </Button>
+              </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle>Add Expense</DialogTitle>
@@ -247,6 +361,7 @@ export default function Expenses() {
               </form>
             </DialogContent>
           </Dialog>
+          </div>
         )}
       </div>
 
