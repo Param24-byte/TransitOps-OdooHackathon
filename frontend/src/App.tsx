@@ -11,6 +11,7 @@ import Trips from "./pages/Trips";
 import Maintenance from "./pages/Maintenance";
 import Expenses from "./pages/Expenses";
 import Reports from "./pages/Reports";
+import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
 import { ThemeProvider } from "next-themes";
 
@@ -58,6 +59,7 @@ function App() {
             <Route path="/maintenance" element={<Maintenance />} />
             <Route path="/expenses" element={<Expenses />} />
             <Route path="/reports" element={<RoleRoute allowedRoles={["FLEET_MANAGER", "FINANCIAL_ANALYST"]}><Reports /></RoleRoute>} />
+            <Route path="/analytics" element={<RoleRoute allowedRoles={["FLEET_MANAGER", "FINANCIAL_ANALYST"]}><Analytics /></RoleRoute>} />
             <Route path="settings" element={<Settings />} />
           </Route>
         </Routes>

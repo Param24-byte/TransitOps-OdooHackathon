@@ -11,7 +11,8 @@ import {
   Menu,
   Wrench,
   DollarSign,
-  BarChart2
+  BarChart2,
+  PieChart
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "../../lib/utils";
@@ -26,6 +27,7 @@ const navigation = [
   { name: "Maintenance", href: "/maintenance", icon: Wrench },
   { name: "Expenses", href: "/expenses", icon: DollarSign },
   { name: "Reports", href: "/reports", icon: BarChart2, roles: ["FLEET_MANAGER", "FINANCIAL_ANALYST"] },
+  { name: "Analytics", href: "/analytics", icon: PieChart, roles: ["FLEET_MANAGER", "FINANCIAL_ANALYST"] },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 
