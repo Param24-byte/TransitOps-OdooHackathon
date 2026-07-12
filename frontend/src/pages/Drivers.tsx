@@ -35,6 +35,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useAuth } from "../contexts/AuthContext";
+import socket from "../lib/socket";
 
 
 interface Driver {
@@ -62,7 +63,17 @@ export default function Drivers() {
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
   const { toast } = useToast();
+
+  useEffect(() => {
+    socket.on("tripUpdated", () => {
+      setRefreshTrigger(prev => prev + 1);
+    });
+    return () => {
+      socket.off("tripUpdated");
+    };
+  }, []);
 
   const form = useForm<DriverFormValues>({
     resolver: zodResolver(driverSchema),
@@ -92,7 +103,7 @@ export default function Drivers() {
 
   useEffect(() => {
     fetchDrivers();
-  }, []);
+  }, [refreshTrigger]);
 
   const onSubmit = async (data: DriverFormValues) => {
     setIsSubmitting(true);

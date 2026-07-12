@@ -36,6 +36,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useAuth } from "../contexts/AuthContext";
+import socket from "../lib/socket";
 
 
 
@@ -73,7 +74,17 @@ export default function Vehicles() {
   const [regionFilter, setRegionFilter] = useState<string>("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
   const { toast } = useToast();
+
+  useEffect(() => {
+    socket.on("tripUpdated", () => {
+      setRefreshTrigger(prev => prev + 1);
+    });
+    return () => {
+      socket.off("tripUpdated");
+    };
+  }, []);
 
   const form = useForm<VehicleFormValues>({
     resolver: zodResolver(vehicleSchema) as any,
@@ -107,7 +118,7 @@ export default function Vehicles() {
 
   useEffect(() => {
     fetchVehicles();
-  }, [regionFilter]);
+  }, [regionFilter, refreshTrigger]);
 
   const onSubmit = async (data: VehicleFormValues) => {
     setIsSubmitting(true);

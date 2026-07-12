@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from "../components/ui/select";
 import { motion } from "framer-motion";
+import socket from "../lib/socket";
 
 const container = {
   hidden: { opacity: 0 },
@@ -50,10 +51,22 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [regionFilter, setRegionFilter] = useState<string>("all");
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  const showManagerStats = user?.role && user.role !== "DRIVER";
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    socket.on("tripUpdated", () => {
+      setRefreshTrigger(prev => prev + 1);
+    });
+    return () => {
+      socket.off("tripUpdated");
+    };
   }, []);
 
   useEffect(() => {
@@ -83,7 +96,7 @@ export default function Dashboard() {
     };
 
     fetchStats();
-  }, [regionFilter]);
+  }, [regionFilter, refreshTrigger]);
 
   if (loading) {
     return <div className="p-8">Loading dashboard data...</div>;
@@ -132,20 +145,22 @@ export default function Dashboard() {
         animate="show"
       >
         {/* Vehicles Card */}
-        <motion.div variants={item}>
-        <Card className="transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-1 bg-card/60 backdrop-blur-md border-border/50 h-full">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Vehicles</CardTitle>
-            <Truck className="h-4 w-4 text-slate-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.vehicles?.total || 0}</div>
-            <p className="text-xs text-slate-500">
-              {stats?.vehicles?.available || 0} available for dispatch
-            </p>
-          </CardContent>
-        </Card>
-        </motion.div>
+        {showManagerStats && (
+          <motion.div variants={item}>
+          <Card className="transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-1 bg-card/60 backdrop-blur-md border-border/50 h-full">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Vehicles</CardTitle>
+              <Truck className="h-4 w-4 text-slate-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats?.vehicles?.total || 0}</div>
+              <p className="text-xs text-slate-500">
+                {stats?.vehicles?.available || 0} available for dispatch
+              </p>
+            </CardContent>
+          </Card>
+          </motion.div>
+        )}
 
         {/* Trips Card */}
         <motion.div variants={item}>
@@ -164,20 +179,22 @@ export default function Dashboard() {
         </motion.div>
 
         {/* Maintenance Card */}
-        <motion.div variants={item}>
-        <Card className="transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-1 bg-card/60 backdrop-blur-md border-border/50 h-full">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">In Maintenance</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-amber-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.vehicles?.inShop || 0}</div>
-            <p className="text-xs text-slate-500">
-              Vehicles currently in shop
-            </p>
-          </CardContent>
-        </Card>
-        </motion.div>
+        {showManagerStats && (
+          <motion.div variants={item}>
+          <Card className="transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-1 bg-card/60 backdrop-blur-md border-border/50 h-full">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">In Maintenance</CardTitle>
+              <AlertTriangle className="h-4 w-4 text-amber-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats?.vehicles?.inShop || 0}</div>
+              <p className="text-xs text-slate-500">
+                Vehicles currently in shop
+              </p>
+            </CardContent>
+          </Card>
+          </motion.div>
+        )}
 
         {/* Pending Trips Card */}
         <motion.div variants={item}>
@@ -196,100 +213,107 @@ export default function Dashboard() {
         </motion.div>
 
         {/* Drivers On Duty Card */}
-        <motion.div variants={item}>
-        <Card className="transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-1 bg-card/60 backdrop-blur-md border-border/50 h-full">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Drivers On Duty</CardTitle>
-            <Users className="h-4 w-4 text-slate-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.drivers?.onTrip || 0}</div>
-            <p className="text-xs text-slate-500">
-              Drivers currently active
-            </p>
-          </CardContent>
-        </Card>
-        </motion.div>
+        {showManagerStats && (
+          <motion.div variants={item}>
+          <Card className="transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-1 bg-card/60 backdrop-blur-md border-border/50 h-full">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Drivers On Duty</CardTitle>
+              <Users className="h-4 w-4 text-slate-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats?.drivers?.onTrip || 0}</div>
+              <p className="text-xs text-slate-500">
+                Drivers currently active
+              </p>
+            </CardContent>
+          </Card>
+          </motion.div>
+        )}
 
         {/* Expenses Card */}
-        <motion.div variants={item}>
-        <Card className="transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-1 bg-card/60 backdrop-blur-md border-border/50 h-full">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Monthly Expenses</CardTitle>
-            <IndianRupee className="h-4 w-4 text-slate-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">₹{stats?.expenses?.total?.toLocaleString() || 0}</div>
-            <p className="text-xs text-slate-500">
-              Fuel, maintenance, and tolls
-            </p>
-          </CardContent>
-        </Card>
-        </motion.div>
+        {showManagerStats && (
+          <motion.div variants={item}>
+          <Card className="transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-1 bg-card/60 backdrop-blur-md border-border/50 h-full">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Monthly Expenses</CardTitle>
+              <IndianRupee className="h-4 w-4 text-slate-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">₹{stats?.expenses?.total?.toLocaleString() || 0}</div>
+              <p className="text-xs text-slate-500">
+                Fuel, maintenance, and tolls
+              </p>
+            </CardContent>
+          </Card>
+          </motion.div>
+        )}
       </motion.div>
       
+      
       {/* Chart Section */}
-      <motion.div 
-        className="grid gap-4 md:grid-cols-2 lg:grid-cols-7"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4, duration: 0.5 }}
-      >
-        <Card className="col-span-4 bg-card/60 backdrop-blur-md border-border/50 hover:shadow-md transition-all duration-300">
-          <CardHeader>
-            <CardTitle>Fleet Utilization</CardTitle>
-          </CardHeader>
-          <CardContent className="pl-2">
-            <div className="h-[300px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={stats?.utilization?.chartData || []}
-                  margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} dy={10} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
-                  <Tooltip cursor={{ fill: 'rgba(0,0,0,0.05)' }} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }} />
-                  <Bar dataKey="trips" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={40} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="col-span-3 bg-card/60 backdrop-blur-md border-border/50 hover:shadow-md transition-all duration-300">
-          <CardHeader>
-            <CardTitle>Vehicle Status Distribution</CardTitle>
-          </CardHeader>
-          <CardContent>
-             <div className="h-[250px] w-full mt-4">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={[
-                      { name: 'Available', value: stats?.vehicles?.available || 0 },
-                      { name: 'On Trip', value: stats?.vehicles?.onTrip || 0 },
-                      { name: 'In Shop', value: stats?.vehicles?.inShop || 0 },
-                    ]}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={80}
-                    paddingAngle={5}
-                    dataKey="value"
+      {showManagerStats && (
+        <motion.div 
+          className="grid gap-4 md:grid-cols-2 lg:grid-cols-7"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4, duration: 0.5 }}
+        >
+          <Card className="col-span-4 bg-card/60 backdrop-blur-md border-border/50 hover:shadow-md transition-all duration-300">
+            <CardHeader>
+              <CardTitle>Fleet Utilization</CardTitle>
+            </CardHeader>
+            <CardContent className="pl-2">
+              <div className="h-[300px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={stats?.utilization?.chartData || []}
+                    margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
                   >
-                    <Cell fill="#10b981" />
-                    <Cell fill="#3b82f6" />
-                    <Cell fill="#f59e0b" />
-                  </Pie>
-                  <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }} />
-                  <Legend verticalAlign="bottom" height={36} />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} dy={10} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
+                    <Tooltip cursor={{ fill: 'rgba(0,0,0,0.05)' }} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }} />
+                    <Bar dataKey="trips" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={40} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card className="col-span-3 bg-card/60 backdrop-blur-md border-border/50 hover:shadow-md transition-all duration-300">
+            <CardHeader>
+              <CardTitle>Vehicle Status Distribution</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[250px] w-full mt-4">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={[
+                        { name: 'Available', value: stats?.vehicles?.available || 0 },
+                        { name: 'On Trip', value: stats?.vehicles?.onTrip || 0 },
+                        { name: 'In Shop', value: stats?.vehicles?.inShop || 0 },
+                      ]}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={80}
+                      paddingAngle={5}
+                      dataKey="value"
+                    >
+                      <Cell fill="#10b981" />
+                      <Cell fill="#3b82f6" />
+                      <Cell fill="#f59e0b" />
+                    </Pie>
+                    <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }} />
+                    <Legend verticalAlign="bottom" height={36} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
     </div>
   );
 }
