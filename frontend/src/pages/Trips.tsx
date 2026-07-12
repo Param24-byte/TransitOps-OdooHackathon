@@ -38,7 +38,11 @@ import {
 } from "../components/ui/dropdown-menu";
 import { RefreshCw, MapPin, MoreHorizontal, CheckCircle2, Navigation } from "lucide-react";
 import { useToast } from "../hooks/use-toast";
-import { socket } from "../lib/socket";
+import socket from "../lib/socket";
+import { Skeleton } from "../components/ui/skeleton";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 
 interface Trip {
   id: number;
@@ -56,6 +60,17 @@ interface Trip {
   };
 }
 
+const tripSchema = z.object({
+  vehicleId: z.string().min(1, "Vehicle is required"),
+  driverId: z.string().min(1, "Driver is required"),
+  source: z.string().min(3, "Source must be at least 3 characters"),
+  destination: z.string().min(3, "Destination must be at least 3 characters"),
+  cargoWeight: z.coerce.number().min(1, "Cargo weight must be positive"),
+  plannedDistance: z.coerce.number().min(1, "Distance must be positive"),
+});
+
+type TripFormValues = z.infer<typeof tripSchema>;
+
 export default function Trips() {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
@@ -68,13 +83,16 @@ export default function Trips() {
   
   const { toast } = useToast();
 
-  const [formData, setFormData] = useState({
-    vehicleId: "",
-    driverId: "",
-    source: "",
-    destination: "",
-    cargoWeight: "",
-    plannedDistance: "",
+  const form = useForm<TripFormValues>({
+    resolver: zodResolver(tripSchema),
+    defaultValues: {
+      vehicleId: "",
+      driverId: "",
+      source: "",
+      destination: "",
+      cargoWeight: 0,
+      plannedDistance: 0,
+    },
   });
 
   const fetchTrips = async () => {
@@ -126,24 +144,23 @@ export default function Trips() {
     };
   }, []);
 
-  const handleAddTrip = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (data: TripFormValues) => {
     setIsSubmitting(true);
     try {
       await api.post("/trips", {
-        vehicleId: Number(formData.vehicleId),
-        driverId: Number(formData.driverId),
-        source: formData.source,
-        destination: formData.destination,
-        cargoWeight: Number(formData.cargoWeight),
-        plannedDistance: Number(formData.plannedDistance),
+        vehicleId: Number(data.vehicleId),
+        driverId: Number(data.driverId),
+        source: data.source,
+        destination: data.destination,
+        cargoWeight: Number(data.cargoWeight),
+        plannedDistance: Number(data.plannedDistance),
       });
       toast({
         title: "Success",
         description: "Trip created successfully.",
       });
       setIsDialogOpen(false);
-      setFormData({ vehicleId: "", driverId: "", source: "", destination: "", cargoWeight: "", plannedDistance: "" });
+      form.reset();
       fetchTrips();
       fetchFormOptions(); // Refresh options as vehicle/driver are now taken
     } catch (error: any) {
@@ -215,21 +232,27 @@ export default function Trips() {
                   Draft a new trip and assign a vehicle and driver.
                 </DialogDescription>
               </DialogHeader>
-              <form onSubmit={handleAddTrip}>
+              <form onSubmit={form.handleSubmit(onSubmit)}>
                 <div className="grid gap-4 py-4">
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="source" className="text-right">Source</Label>
-                    <Input id="source" value={formData.source} onChange={(e) => setFormData({ ...formData, source: e.target.value })} className="col-span-3" required />
+                    <div className="col-span-3">
+                      <Input id="source" {...form.register("source")} placeholder="Mumbai" />
+                      {form.formState.errors.source && <p className="text-sm text-red-500 mt-1">{form.formState.errors.source.message}</p>}
+                    </div>
                   </div>
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="destination" className="text-right">Destination</Label>
-                    <Input id="destination" value={formData.destination} onChange={(e) => setFormData({ ...formData, destination: e.target.value })} className="col-span-3" required />
+                    <div className="col-span-3">
+                      <Input id="destination" {...form.register("destination")} placeholder="Delhi" />
+                      {form.formState.errors.destination && <p className="text-sm text-red-500 mt-1">{form.formState.errors.destination.message}</p>}
+                    </div>
                   </div>
                   
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="vehicle" className="text-right">Vehicle</Label>
                     <div className="col-span-3">
-                      <Select value={formData.vehicleId} onValueChange={(val) => setFormData({ ...formData, vehicleId: val })}>
+                      <Select value={form.watch("vehicleId")} onValueChange={(val: any) => form.setValue("vehicleId", val)}>
                         <SelectTrigger><SelectValue placeholder="Select available vehicle" /></SelectTrigger>
                         <SelectContent>
                           {availableVehicles.map(v => (
@@ -238,13 +261,14 @@ export default function Trips() {
                           {availableVehicles.length === 0 && <SelectItem value="none" disabled>No vehicles available</SelectItem>}
                         </SelectContent>
                       </Select>
+                      {form.formState.errors.vehicleId && <p className="text-sm text-red-500 mt-1">{form.formState.errors.vehicleId.message}</p>}
                     </div>
                   </div>
 
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="driver" className="text-right">Driver</Label>
                     <div className="col-span-3">
-                      <Select value={formData.driverId} onValueChange={(val) => setFormData({ ...formData, driverId: val })}>
+                      <Select value={form.watch("driverId")} onValueChange={(val: any) => form.setValue("driverId", val)}>
                         <SelectTrigger><SelectValue placeholder="Select available driver" /></SelectTrigger>
                         <SelectContent>
                           {availableDrivers.map(d => (
@@ -253,20 +277,27 @@ export default function Trips() {
                           {availableDrivers.length === 0 && <SelectItem value="none" disabled>No drivers available</SelectItem>}
                         </SelectContent>
                       </Select>
+                      {form.formState.errors.driverId && <p className="text-sm text-red-500 mt-1">{form.formState.errors.driverId.message}</p>}
                     </div>
                   </div>
 
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="cargo" className="text-right">Cargo (kg)</Label>
-                    <Input id="cargo" type="number" value={formData.cargoWeight} onChange={(e) => setFormData({ ...formData, cargoWeight: e.target.value })} className="col-span-3" required min="1" />
+                    <div className="col-span-3">
+                      <Input id="cargo" type="number" {...form.register("cargoWeight")} placeholder="5000" />
+                      {form.formState.errors.cargoWeight && <p className="text-sm text-red-500 mt-1">{form.formState.errors.cargoWeight.message}</p>}
+                    </div>
                   </div>
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="distance" className="text-right">Distance (km)</Label>
-                    <Input id="distance" type="number" value={formData.plannedDistance} onChange={(e) => setFormData({ ...formData, plannedDistance: e.target.value })} className="col-span-3" required min="1" />
+                    <div className="col-span-3">
+                      <Input id="distance" type="number" {...form.register("plannedDistance")} placeholder="1200" />
+                      {form.formState.errors.plannedDistance && <p className="text-sm text-red-500 mt-1">{form.formState.errors.plannedDistance.message}</p>}
+                    </div>
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button type="submit" disabled={isSubmitting || !formData.vehicleId || !formData.driverId}>
+                  <Button type="submit" disabled={isSubmitting}>
                     {isSubmitting ? "Saving..." : "Create Draft"}
                   </Button>
                 </DialogFooter>
@@ -291,11 +322,17 @@ export default function Trips() {
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow>
-                <TableCell colSpan={7} className="h-24 text-center">
-                  Loading trips...
-                </TableCell>
-              </TableRow>
+              Array.from({ length: 5 }).map((_, i) => (
+                <TableRow key={i}>
+                  <TableCell><Skeleton className="h-4 w-12" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                  <TableCell><Skeleton className="h-6 w-24 rounded-full" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-12" /></TableCell>
+                </TableRow>
+              ))
             ) : trips.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className="h-24 text-center">

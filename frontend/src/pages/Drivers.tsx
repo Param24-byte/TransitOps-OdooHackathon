@@ -30,6 +30,10 @@ import {
 } from "../components/ui/select";
 import { RefreshCw, UserPlus } from "lucide-react";
 import { useToast } from "../hooks/use-toast";
+import { Skeleton } from "../components/ui/skeleton";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 
 interface Driver {
   id: number;
@@ -41,6 +45,15 @@ interface Driver {
   status: "AVAILABLE" | "ON_TRIP" | "OFF_DUTY";
 }
 
+const driverSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  licenseNumber: z.string().min(5, "Invalid license format"),
+  licenseCategory: z.enum(["LMV", "HMV", "MCWG"]),
+  contactNumber: z.string().min(10, "Contact must be at least 10 digits").max(15, "Contact too long"),
+});
+
+type DriverFormValues = z.infer<typeof driverSchema>;
+
 export default function Drivers() {
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [loading, setLoading] = useState(true);
@@ -48,11 +61,14 @@ export default function Drivers() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
-  const [formData, setFormData] = useState({
-    name: "",
-    licenseNumber: "",
-    licenseCategory: "HMV",
-    contactNumber: "",
+  const form = useForm<DriverFormValues>({
+    resolver: zodResolver(driverSchema),
+    defaultValues: {
+      name: "",
+      licenseNumber: "",
+      licenseCategory: "HMV",
+      contactNumber: "",
+    },
   });
 
   const fetchDrivers = async () => {
@@ -75,17 +91,16 @@ export default function Drivers() {
     fetchDrivers();
   }, []);
 
-  const handleAddDriver = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (data: DriverFormValues) => {
     setIsSubmitting(true);
     try {
-      await api.post("/drivers", formData);
+      await api.post("/drivers", data);
       toast({
         title: "Success",
         description: "Driver added successfully.",
       });
       setIsDialogOpen(false);
-      setFormData({ name: "", licenseNumber: "", licenseCategory: "HMV", contactNumber: "" });
+      form.reset();
       fetchDrivers();
     } catch (error: any) {
       toast({
@@ -143,20 +158,26 @@ export default function Drivers() {
                   Enter the driver's details to onboard them.
                 </DialogDescription>
               </DialogHeader>
-              <form onSubmit={handleAddDriver}>
+              <form onSubmit={form.handleSubmit(onSubmit)}>
                 <div className="grid gap-4 py-4">
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="name" className="text-right">Name</Label>
-                    <Input id="name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="col-span-3" required />
+                    <div className="col-span-3">
+                      <Input id="name" {...form.register("name")} placeholder="Ramesh Singh" />
+                      {form.formState.errors.name && <p className="text-sm text-red-500 mt-1">{form.formState.errors.name.message}</p>}
+                    </div>
                   </div>
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="license" className="text-right">License</Label>
-                    <Input id="license" value={formData.licenseNumber} onChange={(e) => setFormData({ ...formData, licenseNumber: e.target.value })} className="col-span-3" required />
+                    <div className="col-span-3">
+                      <Input id="license" {...form.register("licenseNumber")} placeholder="MH1420230000000" />
+                      {form.formState.errors.licenseNumber && <p className="text-sm text-red-500 mt-1">{form.formState.errors.licenseNumber.message}</p>}
+                    </div>
                   </div>
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="category" className="text-right">Category</Label>
                     <div className="col-span-3">
-                      <Select value={formData.licenseCategory} onValueChange={(val) => setFormData({ ...formData, licenseCategory: val })}>
+                      <Select value={form.watch("licenseCategory")} onValueChange={(val: any) => form.setValue("licenseCategory", val)}>
                         <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="LMV">LMV (Light Motor Vehicle)</SelectItem>
@@ -164,11 +185,15 @@ export default function Drivers() {
                           <SelectItem value="MCWG">MCWG (Motorcycle with Gear)</SelectItem>
                         </SelectContent>
                       </Select>
+                      {form.formState.errors.licenseCategory && <p className="text-sm text-red-500 mt-1">{form.formState.errors.licenseCategory.message}</p>}
                     </div>
                   </div>
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="contact" className="text-right">Contact</Label>
-                    <Input id="contact" value={formData.contactNumber} onChange={(e) => setFormData({ ...formData, contactNumber: e.target.value })} className="col-span-3" required />
+                    <div className="col-span-3">
+                      <Input id="contact" {...form.register("contactNumber")} placeholder="9876543210" />
+                      {form.formState.errors.contactNumber && <p className="text-sm text-red-500 mt-1">{form.formState.errors.contactNumber.message}</p>}
+                    </div>
                   </div>
                 </div>
                 <DialogFooter>
@@ -196,11 +221,16 @@ export default function Drivers() {
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow>
-                <TableCell colSpan={6} className="h-24 text-center">
-                  Loading drivers...
-                </TableCell>
-              </TableRow>
+              Array.from({ length: 5 }).map((_, i) => (
+                <TableRow key={i}>
+                  <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-12" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-12" /></TableCell>
+                  <TableCell><Skeleton className="h-6 w-24 rounded-full" /></TableCell>
+                </TableRow>
+              ))
             ) : drivers.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="h-24 text-center">

@@ -1,92 +1,96 @@
-# TransitOps - Smart Transport Operations Platform
+# TransitOps 🚚 - Odoo Hackathon Submission
 
-TransitOps is a centralized, end-to-end transport operations platform designed to digitize vehicle, driver, dispatch, maintenance, and expense management. It enforces strict business rules and provides real-time operational insights without relying on external 3rd-party SaaS APIs.
+TransitOps is a modern, real-time fleet management and logistics dashboard built from scratch. It minimizes reliance on 3rd-party APIs, relying instead on a robust, bespoke full-stack architecture designed for performance, modularity, and an intuitive user experience.
 
-## 🚀 Tech Stack & Architecture
+## ✨ Features
 
-This project is built with a strictly typed, modular, and enterprise-grade architecture:
+- **Real-Time Synchronization**: Sockets (`socket.io`) instantly push state changes (like trip dispatches and completions) across all connected clients without page reloads.
+- **Dynamic Analytics Dashboard**: Beautiful, responsive charts built with `Recharts` to monitor fleet utilization and status distributions at a glance.
+- **Robust Input Validation**: Strict client-side validation powered by `Zod` and `React Hook Form` ensures data integrity with graceful inline error handling.
+- **Premium UI/UX**:
+  - Built with `Tailwind CSS`, `shadcn/ui`, and `Framer Motion` for smooth page transitions.
+  - Animated Skeleton loaders for seamless data fetching.
+  - Native **Light & Dark Mode** support.
+- **Atomicity**: Complex database operations (like dispatching a trip and updating vehicle/driver states simultaneously) are wrapped in Prisma Transactions to ensure 100% data consistency.
 
-### Frontend
-- **Framework:** React + Vite (TypeScript)
-- **Styling:** Tailwind CSS + shadcn/ui for a premium, clean, and interactive UI
-- **Animations:** Framer Motion for micro-interactions and smooth navigation
-- **Charts:** Recharts for dynamic visual analytics (ROI, Fleet Utilization)
-- **Real-time:** Socket.io-client for live dashboard updates
+---
+
+## 🏗 Architecture & Tech Stack
+
+The project follows a modular Service-Controller-Router pattern.
 
 ### Backend
-- **Framework:** Node.js + Express (TypeScript)
-- **Architecture:** Modular MVC pattern (Routes ➔ Controllers ➔ Services)
-- **Validation:** Strict server-side payload validation for robust error handling
-- **Real-time:** Socket.io server to push dynamic updates to connected clients
-- **Authentication:** Custom JWT-based Role-Based Access Control (RBAC) (No Auth0/Firebase)
+- **Runtime**: Node.js & Express.js (TypeScript)
+- **Database**: PostgreSQL (via Prisma ORM)
+- **Real-Time**: Socket.io
+- **Security**: JWT Authentication, bcrypt password hashing, CORS.
 
-### Database
-- **Database:** PostgreSQL (Running locally via Docker)
-- **ORM:** Prisma for type-safe schema modeling, migrations, and referential integrity
-
----
-
-## 🛠️ Key Features
-
-1. **Authentication & RBAC:** Secure login for Fleet Managers, Drivers, Safety Officers, and Financial Analysts.
-2. **Real-Time Dashboard:** Live KPIs for active vehicles, pending trips, and fleet utilization.
-3. **Vehicle & Driver Registries:** Full CRUD operations with strict status enums (`Available`, `On Trip`, `In Shop`, `Suspended`).
-4. **Trip Management:** Comprehensive trip lifecycle (Draft ➔ Dispatched ➔ Completed ➔ Cancelled) with automatic entity status updates.
-5. **Maintenance & Fuel Logs:** Automatic operational cost tracking and dynamic status routing.
-6. **Graceful Error Handling:** Robust validation ensures bad data is caught at the API layer and returned as readable, user-friendly UI toasts.
+### Frontend
+- **Framework**: React.js (Vite) & TypeScript
+- **Routing**: React Router v6
+- **Styling**: Tailwind CSS, shadcn/ui
+- **State/Fetching**: Axios, Context API
+- **Validation**: Zod + React Hook Form
+- **Animation**: Framer Motion
 
 ---
 
-## 🏗️ Getting Started (Local Development)
+## 🚀 Getting Started
 
 ### Prerequisites
 - Node.js (v18+)
-- Docker Desktop
-- npm or yarn
+- PostgreSQL installed and running locally
 
 ### 1. Database Setup
-We use Docker to spin up a local PostgreSQL instance.
-
+Ensure PostgreSQL is running. Open your terminal and create the database:
 ```bash
-# Start the PostgreSQL container in the background
-docker compose up -d
-
-# Navigate to the backend
-cd backend
-
-# Push the Prisma schema to sync the database
-npx prisma db push
+createdb transitops
 ```
 
 ### 2. Backend Setup
 ```bash
-# Open a new terminal and navigate to the backend
 cd backend
-
-# Install dependencies
 npm install
 
-# Start the Express server (typically runs on port 5000)
+# Setup environment variables
+cp .env.example .env
+# Edit .env with your Postgres connection string, e.g.:
+# DATABASE_URL="postgresql://postgres:password@localhost:5432/transitops?schema=public"
+
+# Run migrations and seed data
+npx prisma migrate dev --name init
+npm run seed
+
+# Start the dev server
 npm run dev
 ```
+The backend will run on `http://localhost:5000`.
 
 ### 3. Frontend Setup
+In a new terminal window:
 ```bash
-# Open a new terminal and navigate to the frontend
 cd frontend
-
-# Install dependencies
 npm install
 
-# Start the Vite development server
+# Start the Vite server
 npm run dev
 ```
+The frontend will run on `http://localhost:5173`.
+
+### 4. Demo Login
+Use the seeded credentials to log in:
+- **Email:** `fleet@transitops.com`
+- **Password:** `password123`
 
 ---
 
-## 🧠 Evaluation Criteria Addressed
-- **Clean Code & Modularity:** Separation of concerns in both frontend (components/pages) and backend (routes/controllers/services).
-- **Zero 3rd-Party API Reliance:** Fully self-hosted authentication, file storage, and real-time sockets.
-- **Dynamic Database & Real-Time:** Socket.io ensures the UI reacts instantly to database mutations.
-- **Robustness:** No raw stack traces exposed to the user. Every edge case (e.g. assigning a suspended driver to a trip) is gracefully caught.
-- **Scalability & Security:** Password hashing via bcrypt, JWT route protection, and optimized relational database design via Prisma.
+## 🛠 Design Decisions & Judging Criteria Addressed
+
+1. **Clean Code & Modularity**: The backend strictly separates concerns (Routes -> Controllers -> Services).
+2. **Database Design**: The PostgreSQL schema uses Enums (`TripStatus`, `VehicleStatus`) and foreign keys with referential integrity to enforce business rules at the database level.
+3. **User Error & Usability**: Replaced generic alerts with intuitive inline Zod validation and non-blocking toast notifications.
+4. **Performance & Scalability**: Skeleton loaders keep the perceived performance high. Using Prisma transactions ensures the system can scale to handle concurrent dispatch requests without race conditions.
+
+---
+
+*Built with ❤️ for the Odoo Hackathon.*
