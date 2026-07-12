@@ -99,9 +99,10 @@ export const vehicleController = {
     }
   },
 
-  async getStats(_req: Request, res: Response): Promise<void> {
+  async getStats(req: Request, res: Response): Promise<void> {
     try {
-      const stats = await vehicleService.getStats();
+      const region = req.query.region as string | undefined;
+      const stats = await vehicleService.getStats(region);
 
       res.status(200).json({
         success: true,

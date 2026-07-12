@@ -124,13 +124,14 @@ export const vehicleService = {
   /**
    * Get dashboard statistics for vehicles.
    */
-  async getStats() {
+  async getStats(region?: string) {
+    const where = region ? { region } : {};
     const [total, available, onTrip, inShop, retired] = await Promise.all([
-      prisma.vehicle.count(),
-      prisma.vehicle.count({ where: { status: "AVAILABLE" } }),
-      prisma.vehicle.count({ where: { status: "ON_TRIP" } }),
-      prisma.vehicle.count({ where: { status: "IN_SHOP" } }),
-      prisma.vehicle.count({ where: { status: "RETIRED" } }),
+      prisma.vehicle.count({ where }),
+      prisma.vehicle.count({ where: { ...where, status: "AVAILABLE" } }),
+      prisma.vehicle.count({ where: { ...where, status: "ON_TRIP" } }),
+      prisma.vehicle.count({ where: { ...where, status: "IN_SHOP" } }),
+      prisma.vehicle.count({ where: { ...where, status: "RETIRED" } }),
     ]);
 
     return { total, available, onTrip, inShop, retired };
