@@ -8,6 +8,10 @@ export const tripController = {
   async getAll(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const status = req.query.status as TripStatus | undefined;
+      if (status && !Object.values(TripStatus).includes(status)) {
+        res.status(400).json({ success: false, message: "Invalid trip status." });
+        return;
+      }
       const trips = await tripService.getAll(status);
 
       res.status(200).json({

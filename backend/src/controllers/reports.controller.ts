@@ -7,7 +7,7 @@ export const reportsController = {
       const data = await reportsService.getFuelEfficiency();
       res.status(200).json({ success: true, data });
     } catch (error) {
-      res.status(500).json({ success: false, message: "Failed to get fuel efficiency report." });
+      next(error);
     }
   },
 
@@ -16,7 +16,7 @@ export const reportsController = {
       const data = await reportsService.getOperationalCosts();
       res.status(200).json({ success: true, data });
     } catch (error) {
-      res.status(500).json({ success: false, message: "Failed to get operational costs report." });
+      next(error);
     }
   },
 
@@ -25,7 +25,7 @@ export const reportsController = {
       const data = await reportsService.getFleetUtilization();
       res.status(200).json({ success: true, data });
     } catch (error) {
-      res.status(500).json({ success: false, message: "Failed to get fleet utilization report." });
+      next(error);
     }
   },
 
@@ -34,7 +34,7 @@ export const reportsController = {
       const data = await reportsService.getVehicleROI();
       res.status(200).json({ success: true, data });
     } catch (error) {
-      res.status(500).json({ success: false, message: "Failed to get vehicle ROI report." });
+      next(error);
     }
   },
 

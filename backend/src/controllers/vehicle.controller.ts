@@ -8,6 +8,10 @@ export const vehicleController = {
   async getAll(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const status = req.query.status as VehicleStatus | undefined;
+      if (status && !Object.values(VehicleStatus).includes(status)) {
+        res.status(400).json({ success: false, message: "Invalid vehicle status." });
+        return;
+      }
       const region = req.query.region as string | undefined;
       const vehicles = await vehicleService.getAll(status, region);
 

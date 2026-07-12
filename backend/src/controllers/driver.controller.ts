@@ -8,6 +8,10 @@ export const driverController = {
   async getAll(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const status = req.query.status as DriverStatus | undefined;
+      if (status && !Object.values(DriverStatus).includes(status)) {
+        res.status(400).json({ success: false, message: "Invalid driver status." });
+        return;
+      }
       const drivers = await driverService.getAll(status);
 
       res.status(200).json({
