@@ -13,6 +13,7 @@
 
 import prisma from "../lib/prisma";
 import { TripStatus } from "@prisma/client";
+import { io } from "../index";
 
 export const tripService = {
   /**
@@ -90,7 +91,7 @@ export const tripService = {
       );
     }
 
-    return prisma.trip.create({
+    const newTrip = await prisma.trip.create({
       data: {
         ...data,
         status: "DRAFT",
@@ -100,6 +101,9 @@ export const tripService = {
         driver: { select: { name: true, licenseNumber: true } },
       },
     });
+    
+    io.emit("tripUpdated", { action: "create", trip: newTrip });
+    return newTrip;
   },
 
   /**
@@ -159,6 +163,7 @@ export const tripService = {
         }),
       ]);
 
+      io.emit("tripUpdated", { action: "dispatch", trip: updatedTrip });
       return updatedTrip;
     });
   },
@@ -198,6 +203,7 @@ export const tripService = {
         }),
       ]);
 
+      io.emit("tripUpdated", { action: "complete", trip: updatedTrip });
       return updatedTrip;
     });
   },
@@ -241,13 +247,16 @@ export const tripService = {
 
       await Promise.all(updates);
 
-      return tx.trip.findUnique({
+      const updatedTrip = await tx.trip.findUnique({
         where: { id },
         include: {
           vehicle: { select: { registrationNo: true, name: true } },
           driver: { select: { name: true } },
         },
       });
+      
+      io.emit("tripUpdated", { action: "cancel", trip: updatedTrip });
+      return updatedTrip;
     });
   },
 

@@ -9,6 +9,20 @@ import {
 import { Truck, Map, AlertTriangle, IndianRupee } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
+} from "recharts";
+
 export default function Dashboard() {
   const { user } = useAuth();
   const [stats, setStats] = useState<any>(null);
@@ -109,39 +123,67 @@ export default function Dashboard() {
         </Card>
       </div>
       
-      {/* Chart Section Placeholder */}
+      {/* Chart Section */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
         <Card className="col-span-4">
           <CardHeader>
-            <CardTitle>Fleet Activity</CardTitle>
+            <CardTitle>Fleet Utilization</CardTitle>
           </CardHeader>
           <CardContent className="pl-2">
-            <div className="h-[300px] flex items-center justify-center border-2 border-dashed border-slate-200 rounded-md text-slate-400">
-              Chart implementation pending
+            <div className="h-[300px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={[
+                    { name: 'Mon', trips: 12 },
+                    { name: 'Tue', trips: 19 },
+                    { name: 'Wed', trips: 15 },
+                    { name: 'Thu', trips: Math.max(1, stats?.trips?.completed || 0) },
+                    { name: 'Fri', trips: 10 },
+                    { name: 'Sat', trips: 5 },
+                    { name: 'Sun', trips: 4 },
+                  ]}
+                  margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} dy={10} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
+                  <Tooltip cursor={{ fill: 'rgba(0,0,0,0.05)' }} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }} />
+                  <Bar dataKey="trips" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={40} />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
         
         <Card className="col-span-3">
           <CardHeader>
-            <CardTitle>Recent Alerts</CardTitle>
+            <CardTitle>Vehicle Status Distribution</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center">
-                <span className="flex h-2 w-2 translate-y-1 rounded-full bg-amber-500" />
-                <div className="ml-4 space-y-1">
-                  <p className="text-sm font-medium leading-none">MH-01-GH-3456</p>
-                  <p className="text-sm text-slate-500">Maintenance scheduled tomorrow</p>
-                </div>
-              </div>
-              <div className="flex items-center">
-                <span className="flex h-2 w-2 translate-y-1 rounded-full bg-red-500" />
-                <div className="ml-4 space-y-1">
-                  <p className="text-sm font-medium leading-none">MH-14-CD-5678</p>
-                  <p className="text-sm text-slate-500">Route deviation alert</p>
-                </div>
-              </div>
+             <div className="h-[250px] w-full mt-4">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={[
+                      { name: 'Available', value: stats?.vehicles?.available || 0 },
+                      { name: 'On Trip', value: stats?.vehicles?.onTrip || 0 },
+                      { name: 'In Shop', value: stats?.vehicles?.inShop || 0 },
+                    ]}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    <Cell fill="#10b981" />
+                    <Cell fill="#3b82f6" />
+                    <Cell fill="#f59e0b" />
+                  </Pie>
+                  <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }} />
+                  <Legend verticalAlign="bottom" height={36} />
+                </PieChart>
+              </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>

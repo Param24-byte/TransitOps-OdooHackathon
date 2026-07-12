@@ -5,10 +5,9 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import { Toaster } from "./components/ui/toaster";
 
-// Placeholder pages
-const Vehicles = () => <div className="p-8"><h1 className="text-2xl font-bold">Vehicles (Coming Soon)</h1></div>;
-const Drivers = () => <div className="p-8"><h1 className="text-2xl font-bold">Drivers (Coming Soon)</h1></div>;
-const Trips = () => <div className="p-8"><h1 className="text-2xl font-bold">Trips (Coming Soon)</h1></div>;
+import Vehicles from "./pages/Vehicles";
+import Drivers from "./pages/Drivers";
+import Trips from "./pages/Trips";
 
 // Protected Route wrapper
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
