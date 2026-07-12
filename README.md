@@ -71,6 +71,76 @@ The project follows a strict modular Service-Controller-Router pattern.
 - **State/Fetching**: Axios, Context API
 - **Charts**: Recharts
 
+### System Flow
+```mermaid
+graph TD
+    %% Define Styles
+    classDef frontend fill:#3b82f6,stroke:#1d4ed8,stroke-width:2px,color:#fff,rx:8,ry:8
+    classDef backend fill:#10b981,stroke:#047857,stroke-width:2px,color:#fff,rx:8,ry:8
+    classDef db fill:#8b5cf6,stroke:#6d28d9,stroke-width:2px,color:#fff,rx:8,ry:8
+    classDef wss fill:#f59e0b,stroke:#b45309,stroke-width:2px,color:#fff,rx:8,ry:8
+    classDef controller fill:#f3f4f6,stroke:#9ca3af,stroke-width:1px,color:#1f2937,rx:4,ry:4
+    classDef service fill:#e5e7eb,stroke:#6b7280,stroke-width:1px,color:#1f2937,rx:4,ry:4
+
+    subgraph Client ["Client Side (React / Vite)"]
+        UI["React UI Components<br/>(Tailwind, shadcn/ui, Recharts)"]:::frontend
+        State["State Management<br/>(React Context)"]:::frontend
+        DataFetch["REST Client<br/>(Axios)"]:::frontend
+        WSClient["WebSocket Client<br/>(Socket.io-client)"]:::wss
+        
+        UI --> State
+        State --> DataFetch
+        State --> WSClient
+    end
+
+    subgraph Server ["Backend Server (Node.js / Express)"]
+        Gateway["Express Router & Middleware<br/>(Auth, Validation, Error Handling)"]:::backend
+        WSServer["WebSocket Server<br/>(Socket.io)"]:::wss
+        
+        subgraph Controllers ["Controllers (Request/Response)"]
+            AuthC["Auth Controller"]:::controller
+            TripC["Trip Controller"]:::controller
+            VehicleC["Vehicle Controller"]:::controller
+            DriverC["Driver Controller"]:::controller
+            ReportC["Report Controller"]:::controller
+        end
+        
+        subgraph Services ["Services (Business Logic & Transactions)"]
+            AuthS["Auth Service"]:::service
+            TripS["Trip Service"]:::service
+            VehicleS["Vehicle Service"]:::service
+            DriverS["Driver Service"]:::service
+            ReportS["Report Service"]:::service
+        end
+        
+        ORM["Prisma ORM<br/>(Data Access Layer)"]:::backend
+    end
+
+    subgraph Database ["Storage Layer"]
+        Postgres[("PostgreSQL DB<br/>(Relational Data)")]:::db
+    end
+
+    %% Connections
+    DataFetch -- "HTTP Request (JWT)" --> Gateway
+    WSClient <== "Real-time Sync" ==> WSServer
+
+    Gateway --> AuthC & TripC & VehicleC & DriverC & ReportC
+    
+    AuthC --> AuthS
+    TripC --> TripS
+    VehicleC --> VehicleS
+    DriverC --> DriverS
+    ReportC --> ReportS
+
+    Services --> ORM
+    ORM <== "TCP/IP" ==> Postgres
+    
+    %% Realtime Events
+    TripS -. "Emits State Change" .-> WSServer
+    VehicleS -. "Emits State Change" .-> WSServer
+    DriverS -. "Emits State Change" .-> WSServer
+```
+
 ---
 
 ## 🗄️ Database Entity-Relationship Diagram (ERD)
