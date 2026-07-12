@@ -29,6 +29,7 @@ import {
   SelectValue,
 } from "../components/ui/select";
 import { RefreshCw, Plus, Trash2 } from "lucide-react";
+import { motion } from "framer-motion";
 import { useToast } from "../hooks/use-toast";
 import { Skeleton } from "../components/ui/skeleton";
 import { useForm } from "react-hook-form";
@@ -282,7 +283,12 @@ export default function Vehicles() {
         </div>
       </div>
 
-      <div className="rounded-md border bg-white dark:bg-slate-950">
+      <motion.div 
+        className="rounded-xl border border-border/50 bg-card/60 backdrop-blur-md shadow-sm overflow-hidden"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+      >
         <Table>
           <TableHeader>
             <TableRow>
@@ -338,7 +344,7 @@ export default function Vehicles() {
             )}
           </TableBody>
         </Table>
-      </div>
+      </motion.div>
     </div>
   );
 }

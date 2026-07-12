@@ -291,7 +291,7 @@ export default function Maintenance() {
                         Close
                       </Button>
                     )}
-                    {user?.role === "FLEET_MANAGER" && (
+                    {user?.role === "FLEET_MANAGER" && log.status === "CLOSED" && (
                       <Button variant="ghost" size="icon" onClick={() => handleDelete(log.id)} title="Delete log" className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950">
                         <Trash2 className="h-4 w-4" />
                       </Button>

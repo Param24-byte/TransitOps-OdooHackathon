@@ -15,6 +15,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../components/ui/select";
+import { motion } from "framer-motion";
+
+const container = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: { staggerChildren: 0.1 }
+  }
+};
+
+const item = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0 }
+};
 
 import {
   BarChart,
@@ -35,6 +49,12 @@ export default function Dashboard() {
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [regionFilter, setRegionFilter] = useState<string>("all");
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -78,8 +98,17 @@ export default function Dashboard() {
             Welcome back, {user?.name}. Here's what's happening today.
           </p>
         </div>
-        <div className="w-48">
-          <Select value={regionFilter} onValueChange={setRegionFilter}>
+        <div className="flex items-center gap-6">
+          <div className="text-right hidden sm:block bg-card/40 backdrop-blur-md px-4 py-2 rounded-lg border border-border/50 shadow-sm">
+            <p className="font-semibold text-primary tracking-wider">
+              {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+            </p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {currentTime.toLocaleDateString([], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+            </p>
+          </div>
+          <div className="w-48">
+            <Select value={regionFilter} onValueChange={setRegionFilter}>
             <SelectTrigger>
               <SelectValue placeholder="All Regions" />
             </SelectTrigger>
@@ -92,11 +121,19 @@ export default function Dashboard() {
             </SelectContent>
           </Select>
         </div>
+        </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
+
+      <motion.div 
+        className="grid gap-4 md:grid-cols-3 lg:grid-cols-6"
+        variants={container}
+        initial="hidden"
+        animate="show"
+      >
         {/* Vehicles Card */}
-        <Card>
+        <motion.div variants={item}>
+        <Card className="transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-1 bg-card/60 backdrop-blur-md border-border/50 h-full">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Vehicles</CardTitle>
             <Truck className="h-4 w-4 text-slate-500" />
@@ -108,9 +145,11 @@ export default function Dashboard() {
             </p>
           </CardContent>
         </Card>
+        </motion.div>
 
         {/* Trips Card */}
-        <Card>
+        <motion.div variants={item}>
+        <Card className="transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-1 bg-card/60 backdrop-blur-md border-border/50 h-full">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Active Trips</CardTitle>
             <Map className="h-4 w-4 text-slate-500" />
@@ -122,9 +161,11 @@ export default function Dashboard() {
             </p>
           </CardContent>
         </Card>
+        </motion.div>
 
         {/* Maintenance Card */}
-        <Card>
+        <motion.div variants={item}>
+        <Card className="transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-1 bg-card/60 backdrop-blur-md border-border/50 h-full">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">In Maintenance</CardTitle>
             <AlertTriangle className="h-4 w-4 text-amber-500" />
@@ -136,9 +177,11 @@ export default function Dashboard() {
             </p>
           </CardContent>
         </Card>
+        </motion.div>
 
         {/* Pending Trips Card */}
-        <Card>
+        <motion.div variants={item}>
+        <Card className="transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-1 bg-card/60 backdrop-blur-md border-border/50 h-full">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Pending Trips</CardTitle>
             <Clock className="h-4 w-4 text-slate-500" />
@@ -150,9 +193,11 @@ export default function Dashboard() {
             </p>
           </CardContent>
         </Card>
+        </motion.div>
 
         {/* Drivers On Duty Card */}
-        <Card>
+        <motion.div variants={item}>
+        <Card className="transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-1 bg-card/60 backdrop-blur-md border-border/50 h-full">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Drivers On Duty</CardTitle>
             <Users className="h-4 w-4 text-slate-500" />
@@ -164,9 +209,11 @@ export default function Dashboard() {
             </p>
           </CardContent>
         </Card>
+        </motion.div>
 
         {/* Expenses Card */}
-        <Card>
+        <motion.div variants={item}>
+        <Card className="transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-1 bg-card/60 backdrop-blur-md border-border/50 h-full">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Monthly Expenses</CardTitle>
             <IndianRupee className="h-4 w-4 text-slate-500" />
@@ -178,11 +225,17 @@ export default function Dashboard() {
             </p>
           </CardContent>
         </Card>
-      </div>
+        </motion.div>
+      </motion.div>
       
       {/* Chart Section */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="col-span-4">
+      <motion.div 
+        className="grid gap-4 md:grid-cols-2 lg:grid-cols-7"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4, duration: 0.5 }}
+      >
+        <Card className="col-span-4 bg-card/60 backdrop-blur-md border-border/50 hover:shadow-md transition-all duration-300">
           <CardHeader>
             <CardTitle>Fleet Utilization</CardTitle>
           </CardHeader>
@@ -204,7 +257,7 @@ export default function Dashboard() {
           </CardContent>
         </Card>
         
-        <Card className="col-span-3">
+        <Card className="col-span-3 bg-card/60 backdrop-blur-md border-border/50 hover:shadow-md transition-all duration-300">
           <CardHeader>
             <CardTitle>Vehicle Status Distribution</CardTitle>
           </CardHeader>
@@ -236,7 +289,7 @@ export default function Dashboard() {
             </div>
           </CardContent>
         </Card>
-      </div>
+      </motion.div>
     </div>
   );
 }

@@ -41,7 +41,11 @@ export default function AppLayout() {
   };
 
   return (
-    <div className="flex h-screen bg-background text-foreground overflow-hidden">
+    <div className="flex h-screen bg-background text-foreground overflow-hidden relative">
+      {/* Decorative gradient blobs */}
+      <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
+      <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-blue-500/10 rounded-full blur-3xl translate-x-1/3 translate-y-1/3 pointer-events-none" />
+
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
         <div
@@ -53,7 +57,7 @@ export default function AppLayout() {
       {/* Sidebar */}
       <div
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-64 bg-card border-r border-border transition-transform duration-200 ease-in-out md:translate-x-0 md:static md:flex md:flex-col",
+          "fixed inset-y-0 left-0 z-50 w-64 bg-card/80 backdrop-blur-xl border-r border-border transition-transform duration-200 ease-in-out md:translate-x-0 md:static md:flex md:flex-col",
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
@@ -75,16 +79,16 @@ export default function AppLayout() {
                   to={item.href}
                   onClick={() => setSidebarOpen(false)}
                   className={cn(
-                    "group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors",
+                    "group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200",
                     isActive
-                      ? "bg-secondary text-primary"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                      ? "bg-primary text-primary-foreground shadow-md shadow-primary/20 scale-[1.02]"
+                      : "text-muted-foreground hover:bg-muted/50 hover:text-foreground hover:scale-[1.02]"
                   )}
                 >
                   <item.icon
                     className={cn(
-                      "mr-3 flex-shrink-0 h-5 w-5",
-                      isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground"
+                      "mr-3 flex-shrink-0 h-5 w-5 transition-colors",
+                      isActive ? "text-primary-foreground" : "text-muted-foreground group-hover:text-foreground"
                     )}
                     aria-hidden="true"
                   />
@@ -119,7 +123,7 @@ export default function AppLayout() {
       {/* Main Content Area */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Top Header (Mobile) */}
-        <header className="md:hidden flex h-16 flex-shrink-0 items-center justify-between border-b border-border bg-card px-4">
+        <header className="md:hidden flex h-16 flex-shrink-0 items-center justify-between border-b border-border bg-card/80 backdrop-blur-md px-4 relative z-10">
           <div className="flex items-center text-xl font-bold text-primary">
             <Truck className="mr-2 h-6 w-6" />
             TransitOps
@@ -133,7 +137,7 @@ export default function AppLayout() {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto bg-background">
+        <main className="flex-1 overflow-y-auto bg-transparent relative z-10">
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}

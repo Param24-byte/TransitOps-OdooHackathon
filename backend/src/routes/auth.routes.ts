@@ -8,6 +8,13 @@ import { Router } from "express";
 import { authController } from "../controllers/auth.controller";
 import { authenticate } from "../middleware/auth";
 import { validate } from "../middleware/validate";
+import rateLimit from "express-rate-limit";
+
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // Limit each IP to 5 requests per windowMs
+  message: { success: false, error: "Too many login attempts, please try again after 15 minutes" },
+});
 
 const router = Router();
 
@@ -29,7 +36,7 @@ const loginValidation = {
 };
 
 router.post("/register", validate(registerValidation), authController.register);
-router.post("/login", validate(loginValidation), authController.login);
+router.post("/login", loginLimiter, validate(loginValidation), authController.login);
 router.get("/me", authenticate, authController.getProfile);
 
 export default router;

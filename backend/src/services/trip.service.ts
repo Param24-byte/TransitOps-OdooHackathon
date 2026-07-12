@@ -84,6 +84,12 @@ export const tripService = {
       throw new Error("Driver not found.");
     }
     
+    if (driver.status !== "AVAILABLE") {
+      throw new Error(
+        `Driver ${driver.name} is currently "${driver.status}". Cannot assign to a new trip.`
+      );
+    }
+    
     if (driver.licenseExpiry <= new Date()) {
       throw new Error(`Driver ${driver.name}'s license expired on ${driver.licenseExpiry.toDateString()}.`);
     }

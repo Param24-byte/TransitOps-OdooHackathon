@@ -78,6 +78,9 @@ export const maintenanceService = {
     if (!log) {
       throw new Error("Maintenance log not found.");
     }
+    if (log.status === "ACTIVE") {
+      throw new Error("Cannot delete an active maintenance log. Close it first.");
+    }
     return prisma.maintenanceLog.delete({ where: { id } });
   },
 
