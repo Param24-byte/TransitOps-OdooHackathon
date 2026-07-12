@@ -4,42 +4,13 @@ TransitOps is a modern, real-time fleet management and logistics dashboard built
 
 ---
 
-## 📸 Application Showcase & Features
 
-### 1. 📊 Interactive Dashboard
-* **Use Case:** Monitor key metrics like active trips, vehicles in maintenance, driver statuses, and fleet utilization with dynamic, real-time charts. Get a bird's-eye view of your entire operation at a single glance.
-<br>
-<img src="./docs/dashboard.png" alt="Dashboard Screenshot" width="800"/>
-
-### 2. 💸 Expenses & Direct Fuel Logging
-* **Use Case:** Keep a strict record of all operational costs including insurance, tolls, and permits. Includes a dedicated modal to log fuel usage directly against individual vehicles.
-<br>
-<img src="./docs/expenses.png" alt="Expenses Screenshot" width="800"/>
-
-### 3. 📈 Reports & Analytics
-* **Use Case:** Export actionable insights via CSV, including fuel efficiency, vehicle ROI, and operational costs. View a graphical breakdown (Bar Charts) of total expenses for each individual vehicle to quickly identify cost outliers.
-<br>
-<img src="./docs/reports.png" alt="Reports Screenshot" width="800"/>
-
-### 4. 👥 Driver Management & Safety Scoring
-* **Use Case:** Manage driver profiles, track license categories and expiries, and monitor safety scores to ensure fleet compliance and driver accountability.
-<br>
-<img src="./docs/drivers.png" alt="Drivers Screenshot" width="800"/>
-
-### 5. ⚙️ Settings & Customization
-* **Use Case:** Personalize the dashboard interface. The application features native support for a sleek Dark Mode to reduce eye strain during late-night monitoring.
-<br>
-<img src="./docs/settings.png" alt="Settings Screenshot" width="800"/>
-
-*(Note: Please ensure the screenshots are placed in a `docs/` folder in the root directory with the matching filenames).*
-
----
 
 ## 🚀 Try it Out! (Live Demo Credentials)
 
 Explore the platform as an administrative **Fleet Manager** using the seeded demo credentials:
 
-> 📧 **Email:** `fleet@transitops.com`
+> 📧 **Email:** `fleet@transitops.com` , 'driver@transitops.com', 'finance@transitops.com'
 > 🔑 **Password:** `password123`
 
 ---
