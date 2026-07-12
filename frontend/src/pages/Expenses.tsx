@@ -104,6 +104,7 @@ export default function Expenses() {
       const response = await api.get("/vehicles");
       setAvailableVehicles(response.data.data);
     } catch (error) {
+      console.error(error);
       console.error("Failed to load vehicles for expense form");
     }
   };
@@ -114,6 +115,7 @@ export default function Expenses() {
       const response = await api.get("/expenses");
       setExpenses(response.data.data);
     } catch (error) {
+      console.error(error);
       toast({
         variant: "destructive",
         title: "Error fetching expenses",
@@ -127,6 +129,7 @@ export default function Expenses() {
   useEffect(() => {
     fetchExpenses();
     fetchVehicles();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const onSubmit = async (data: ExpenseFormValues) => {

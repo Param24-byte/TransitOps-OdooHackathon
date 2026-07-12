@@ -15,6 +15,7 @@ export default function Analytics() {
         const response = await api.get("/reports/operational-costs");
         setData(response.data.data);
       } catch (error) {
+        console.error(error);
         toast({
           variant: "destructive",
           title: "Error",
@@ -68,7 +69,7 @@ export default function Analytics() {
                   width={80}
                 />
                 <Tooltip 
-                  formatter={(value: number) => [`₹${value.toLocaleString()}`, "Total Expense"]}
+                  formatter={(value: any) => [`₹${Number(value ?? 0).toLocaleString()}`, "Total Expense"]}
                   contentStyle={{ backgroundColor: "var(--card)", borderColor: "var(--border)", color: "var(--card-foreground)", borderRadius: "8px" }}
                   itemStyle={{ color: "var(--primary)" }}
                   cursor={{ fill: "var(--muted)", opacity: 0.4 }}

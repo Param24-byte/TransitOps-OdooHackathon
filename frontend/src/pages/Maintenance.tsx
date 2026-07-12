@@ -81,6 +81,7 @@ export default function Maintenance() {
       const response = await api.get("/maintenance");
       setLogs(response.data.data);
     } catch (error) {
+      console.error(error);
       toast({
         variant: "destructive",
         title: "Error fetching maintenance logs",
@@ -96,6 +97,7 @@ export default function Maintenance() {
       const response = await api.get("/vehicles");
       setAvailableVehicles(response.data.data);
     } catch (error) {
+      console.error(error);
       console.error("Failed to load vehicles for maintenance form");
     }
   };
@@ -103,6 +105,7 @@ export default function Maintenance() {
   useEffect(() => {
     fetchLogs();
     fetchVehicles();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const onSubmit = async (data: MaintenanceFormValues) => {

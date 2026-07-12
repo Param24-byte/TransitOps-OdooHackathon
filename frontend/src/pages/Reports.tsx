@@ -39,6 +39,7 @@ export default function Reports() {
         setOperationalCosts(costRes.data.data);
         setVehicleROI(roiRes.data.data);
       } catch (error) {
+        console.error(error);
         toast({
           variant: "destructive",
           title: "Error fetching reports",

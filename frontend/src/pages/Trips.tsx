@@ -113,6 +113,7 @@ export default function Trips() {
       const response = await api.get("/trips");
       setTrips(response.data.data);
     } catch (error) {
+      console.error(error);
       toast({
         variant: "destructive",
         title: "Error fetching trips",
@@ -132,6 +133,7 @@ export default function Trips() {
       setAvailableVehicles(vehiclesRes.data.data.filter((v: any) => v.status === "AVAILABLE"));
       setAvailableDrivers(driversRes.data.data.filter((d: any) => d.status === "AVAILABLE"));
     } catch (error) {
+      console.error(error);
       console.error("Failed to load options");
     }
   };
@@ -154,6 +156,7 @@ export default function Trips() {
     return () => {
       socket.off("tripUpdated");
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const onSubmit = async (data: TripFormValues) => {

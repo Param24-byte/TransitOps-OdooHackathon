@@ -108,6 +108,7 @@ export default function Vehicles() {
       const response = await api.get(`/vehicles${regionQuery}`);
       setVehicles(response.data.data);
     } catch (error) {
+      console.error(error);
       toast({
         variant: "destructive",
         title: "Error fetching vehicles",
@@ -120,6 +121,7 @@ export default function Vehicles() {
 
   useEffect(() => {
     fetchVehicles();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [regionFilter, refreshTrigger]);
 
   const handleEdit = (vehicle: Vehicle) => {

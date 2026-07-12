@@ -93,6 +93,7 @@ export default function Drivers() {
       const response = await api.get("/drivers");
       setDrivers(response.data.data);
     } catch (error) {
+      console.error(error);
       toast({
         variant: "destructive",
         title: "Error fetching drivers",
@@ -105,6 +106,7 @@ export default function Drivers() {
 
   useEffect(() => {
     fetchDrivers();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refreshTrigger]);
 
   const handleEdit = (driver: Driver) => {
